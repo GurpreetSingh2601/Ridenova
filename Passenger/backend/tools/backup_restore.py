@@ -30,8 +30,27 @@ def inventory(database):
 
 
 def run_tool(command, database):
-    environment = dict(os.environ, PGDATABASE=database, PGCONNECT_TIMEOUT='10')
-    # URI stays in the environment, not process command-line or error output.
+    from psycopg.conninfo import conninfo_to_dict
+    # libpq's PGDATABASE is a database *name*, not a URI. A complete URI in
+    # PGDATABASE makes pg_dump attempt to connect to a database with that
+    # literal name. Parse it with libpq-compatible psycopg instead, retaining
+    # credentials only in the child environment (never argv or error output).
+    fields = {
+        'host': 'PGHOST', 'hostaddr': 'PGHOSTADDR', 'port': 'PGPORT',
+        'dbname': 'PGDATABASE', 'user': 'PGUSER', 'password': 'PGPASSWORD',
+        'passfile': 'PGPASSFILE', 'sslmode': 'PGSSLMODE',
+        'sslrootcert': 'PGSSLROOTCERT', 'sslcert': 'PGSSLCERT',
+        'sslkey': 'PGSSLKEY', 'sslcrl': 'PGSSLCRL',
+        'sslcrldir': 'PGSSLCRLDIR', 'channel_binding': 'PGCHANNELBINDING',
+        'gssencmode': 'PGGSSENCMODE', 'target_session_attrs': 'PGTARGETSESSIONATTRS',
+    }
+    connection = conninfo_to_dict(database)
+    unsupported = set(connection) - set(fields)
+    if unsupported:
+        raise RuntimeError('Unsupported PostgreSQL connection option for backup tool')
+    environment = {key: value for key, value in os.environ.items() if not key.startswith('PG')}
+    environment.update({fields[key]: str(value) for key, value in connection.items()})
+    environment['PGCONNECT_TIMEOUT'] = '10'
     result = subprocess.run(command, env=environment, capture_output=True)
     if result.returncode:
         raise RuntimeError(command[0] + ' failed; check tool version, access and target. Credentials suppressed.')
@@ -62,6 +81,7 @@ def backup(database, path):
 
 def restore(database, path):
     import psycopg
+    from psycopg.conninfo import conninfo_to_dict
     path = Path(path)
     manifest = json.loads(path.with_suffix(path.suffix + '.json').read_text())
     if hashlib.sha256(path.read_bytes()).hexdigest() != manifest['sha256']:
@@ -69,8 +89,11 @@ def restore(database, path):
     with psycopg.connect(database) as db:
         if db.execute("SELECT 1 FROM pg_tables WHERE schemaname='public' LIMIT 1").fetchone():
             raise RuntimeError('Restore target must be empty; refusing destructive restore')
+    # pg_restore only executes SQL when --dbname is supplied. Pass the plain
+    # database name in argv; host/user/password remain in the child env.
+    name = conninfo_to_dict(database)['dbname']
     run_tool(['pg_restore', '--exit-on-error', '--single-transaction', '--no-owner', '--no-privileges',
-              '--dbname', '', str(path)], database)
+              '--dbname', name, str(path)], database)
     if inventory(database) != manifest['tables']:
         raise RuntimeError('Restore contents do not match backup manifest')
     return manifest
