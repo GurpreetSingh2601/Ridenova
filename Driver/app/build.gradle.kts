@@ -24,7 +24,11 @@ val devToken = localProperties.getProperty("RIDENOVA_DEV_TOKEN", "").trim()
 
 android {
     namespace = "com.ridenova.driver"
-    compileSdk = 37
+    compileSdk {
+        version = release(37) {
+            minorApiLevel = 0
+        }
+    }
 
     defaultConfig {
         applicationId = "com.ridenova.driver"

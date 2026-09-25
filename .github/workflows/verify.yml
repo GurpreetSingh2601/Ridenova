@@ -52,7 +52,7 @@ jobs:
           packages: platform-tools
           log-accepted-android-sdk-licenses: 'false'
       - uses: gradle/actions/setup-gradle@v4
-      - run: sdkmanager 'platforms;android-37' 'build-tools;37.0.0'
+      - run: sdkmanager 'platforms;android-37.0' 'build-tools;37.0.0'
       - working-directory: ${{ matrix.app }}
         run: |
           chmod +x gradlew
