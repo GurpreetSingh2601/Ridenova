@@ -1,0 +1,7 @@
+HISTORICAL BUILD 29 RECORD — not a Build 30 test result. See ../VERIFICATION.md (Build 30 root).
+
+Final source verification
+Command: gradle --offline :app:assembleDebug :app:lintDebug
+Result: BUILD SUCCESSFUL in 57s
+48 actionable tasks: 13 executed, 35 up-to-date
+Debug APK generated. Maps key not configured. No device execution performed.

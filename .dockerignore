@@ -1,0 +1,8 @@
+**/__pycache__
+**/*.sqlite*
+**/*.db
+**/.env*
+**/local.properties
+**/build
+.git
+pg-runtime

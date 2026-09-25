@@ -1,0 +1,12 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="24dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <!-- Transparent, monochrome variant of the RideNova Driver mark. Android
+         applies the notification color; unlike the old opaque icon this keeps
+         the actual stylized R/driver badge silhouette. -->
+    <path android:fillColor="#FFFFFFFF"
+        android:pathData="M23,78L42,28h16c17,0 27,8 27,22 0,10 -6,17 -15,20l15,8 -10,14 -24,-17 -7,17zM48,42l-7,20h15c8,0 13,-4 13,-11 0,-6 -4,-9 -12,-9z"/>
+    <path android:fillColor="#FFFFFFFF"
+        android:fillType="evenOdd"
+        android:pathData="M76,66a17,17 0,1 0,0 34a17,17 0,1 0,0 -34zM76,74a9,9 0,1 1,0 18a9,9 0,1 1,0 -18z"/>
+</vector>

@@ -1,0 +1,24 @@
+{
+  "original_files": 104,
+  "unchanged_count": 87,
+  "modified_files": [
+    "START_HERE.md",
+    "RideNovaPassenger_v0_23_Build23_Major/gradle.properties",
+    "RideNovaDriver_v0_7_Build25_NavigationBeta/app/build.gradle.kts",
+    "RideNovaDriver_v0_7_Build25_NavigationBeta/app/src/main/java/com/ridenova/driver/MainActivity.kt",
+    "RideNovaDriver_v0_7_Build25_NavigationBeta/app/src/main/java/com/ridenova/driver/navigation/DriverRoadRoutes.kt",
+    "RideNovaDriver_v0_7_Build25_NavigationBeta/app/src/main/java/com/ridenova/driver/data/RemoteDriverRepository.kt",
+    "RideNovaDriver_v0_7_Build25_NavigationBeta/app/src/main/java/com/ridenova/driver/data/DriverHttpApi.kt",
+    "RideNovaDriver_v0_7_Build25_NavigationBeta/app/src/main/java/com/ridenova/driver/location/DriverLocationService.kt",
+    "RideNovaDriver_v0_7_Build25_NavigationBeta/app/src/main/java/com/ridenova/driver/ui/DriverApp.kt",
+    "RideNovaDriver_v0_7_Build25_NavigationBeta/app/src/main/java/com/ridenova/driver/ui/DriverViewModel.kt",
+    "RideNovaDriver_v0_7_Build25_NavigationBeta/gradle/wrapper/gradle-wrapper.properties",
+    "RideNovaPassenger_v0_23_Build23_Major/backend/test_server.py",
+    "RideNovaPassenger_v0_23_Build23_Major/backend/server.py",
+    "RideNovaPassenger_v0_23_Build23_Major/app/build.gradle.kts",
+    "RideNovaPassenger_v0_23_Build23_Major/app/src/main/java/com/ridenova/passenger/data/GoogleRoutesService.kt",
+    "RideNovaPassenger_v0_23_Build23_Major/backend/admin/index.html",
+    "RideNovaPassenger_v0_23_Build23_Major/gradle/wrapper/gradle-wrapper.properties"
+  ],
+  "missing_files": []
+}

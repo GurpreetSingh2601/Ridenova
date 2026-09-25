@@ -1,0 +1,12 @@
+RideNova Build 40 Admin verification
+Date: 2026-09-22 UTC
+
+PASS: python3 verification/admin-preflight.py
+  Required DOM IDs and navigation present; all 5 inline scripts passed Node syntax.
+PASS: node verification/admin-source-test.cjs
+  Current navigation, release labels, paginator exposure and script structure present.
+PASS: npm test --prefix verification
+  Dependency-free Admin source test passed.
+
+Full visual browser acceptance remains manual.
+

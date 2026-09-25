@@ -1,0 +1,4 @@
+Python: 18 files parsed.
+Admin JavaScript: 2 scripts passed node --check.
+XML: 14 files parsed (including Driver manifest).
+Kotlin/Compose: source review only, compiler unavailable.

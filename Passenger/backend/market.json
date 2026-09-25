@@ -1,0 +1,20 @@
+{
+  "version": "bc-region1-dev-2026-09-v2",
+  "scheduleMinLeadMinutes": 15,
+  "scheduleMaxDays": 30,
+  "scheduleGapMinutes": 60,
+  "scheduleLateMinutes": 15,
+  "maxScheduledRides": 5,
+  "developmentBounds": [49.0, 49.4, -123.3, -122.4],
+  "regulatoryMinimumTotalCents": 443,
+  "gstBasisPoints": 500,
+  "commissionBasisPoints": 3000,
+  "graceSeconds": 120,
+  "cancellationFeeCents": 500,
+  "quoteTtlSeconds": 120,
+  "tiers": {
+    "ECONOMY": {"title": "Economy", "baseCents": 300, "perKmCents": 125, "perMinuteCents": 25, "minimumSubtotalCents": 700, "seats": 4},
+    "COMFORT": {"title": "Comfort", "baseCents": 450, "perKmCents": 160, "perMinuteCents": 35, "minimumSubtotalCents": 1000, "seats": 4},
+    "XL": {"title": "XL", "baseCents": 550, "perKmCents": 200, "perMinuteCents": 45, "minimumSubtotalCents": 1200, "seats": 6}
+  }
+}

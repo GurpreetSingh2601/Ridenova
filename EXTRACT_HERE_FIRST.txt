@@ -1,0 +1,17 @@
+RIDENOVA BUILD 41 — CONSOLIDATED STAGING CANDIDATE
+=========================================================
+
+1. Extract RN41 directly under G:\RideNova or C:\RideNova.
+2. Read START_HERE_BUILD_41.md before starting the backend.
+3. Open Passenger and Driver as separate Android Studio projects.
+4. Preserve your current database; validate a COPY with MIGRATE_SQLITE_COPY.py.
+
+Passenger: 0.33.0-build41
+Driver:    0.18.0-build41
+Backend:  41.0
+Admin:    0.8.0
+
+No cloud deployment or charges have been initiated. See test results and gates.
+
+Do not nest the project inside multiple long folder names. This short package
+layout avoids Windows error 0x80010135 (Path too long).

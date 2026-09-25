@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">RideNova</string><string name="tagline">Muévete con confianza.</string>
+    <string name="continue_label">Continuar</string><string name="get_started">Comenzar</string>
+    <string name="phone_title">¿Cuál es tu número de móvil?</string><string name="phone_hint">Número de teléfono</string>
+    <string name="otp_title">Verifica tu número</string><string name="otp_hint">Código de 6 dígitos</string><string name="demo_otp">Código demo: 123456</string>
+    <string name="profile_title">Crea tu perfil</string><string name="first_name">Nombre</string><string name="last_name">Apellido</string><string name="email">Correo electrónico</string><string name="photo_optional">La foto de perfil es opcional</string>
+    <string name="where_to">¿A dónde vas?</string><string name="home">Inicio</string><string name="trips">Viajes</string><string name="account">Cuenta</string>
+    <string name="ride_now">Viajar ahora</string><string name="schedule">Programar</string><string name="pickup">Recogida</string><string name="destination">Destino</string><string name="choose_ride">Elige un viaje</string><string name="confirm_ride">Reservar ahora</string>
+    <string name="economy">Económico</string><string name="comfort">Confort</string><string name="xl">XL</string><string name="economy_desc">Viajes asequibles para el día a día</string><string name="comfort_desc">Vehículos más nuevos y espaciosos</string><string name="xl_desc">Hasta 6 pasajeros</string>
+    <string name="fare_estimate">Tarifa estimada</string><string name="booking_summary">Resumen de reserva</string><string name="request_ride">Solicitar viaje</string><string name="searching">Buscando tu conductor RideNova…</string><string name="demo_notice">Modo prototipo — no se solicitará ningún viaje real.</string>
+    <string name="saved_places">Lugares guardados</string><string name="payment">Pago</string><string name="safety">Seguridad</string><string name="language">Idioma</string><string name="help">Ayuda</string>
+</resources>

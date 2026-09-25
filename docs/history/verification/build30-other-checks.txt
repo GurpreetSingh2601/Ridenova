@@ -1,0 +1,6 @@
+Build 30 verification
+PASS: all backend Python modules compile.
+PASS: both Admin inline JavaScript blocks pass node --check.
+PASS: 9 ScheduleTime checks compiled with JDK 17 compiler module and executed.
+NOT RUN: Android Gradle compile/lint, emulator/physical devices, browser visual/DOM integration.
+The Android SDK and Gradle dependency cache used previously are not available in this session.

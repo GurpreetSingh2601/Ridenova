@@ -1,0 +1,41 @@
+HISTORICAL BUILD 29 RECORD — not a Build 30 test result. See ../VERIFICATION.md (Build 30 root).
+
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.6.0/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :app:generateDebugBuildConfig UP-TO-DATE
+> Task :app:generateDebugResources UP-TO-DATE
+> Task :app:packageDebugResources UP-TO-DATE
+> Task :app:processDebugNavigationResources UP-TO-DATE
+> Task :app:parseDebugLocalResources UP-TO-DATE
+> Task :app:generateDebugRFile UP-TO-DATE
+> Task :app:compileDebugKotlin FAILED
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:compileDebugKotlin' (registered by plugin 'com.android.internal.application').
+> Could not resolve all files for configuration ':app:debugCompileClasspath'.
+   > Could not resolve org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.0.
+     Required by:
+         project ':app' > org.jetbrains.kotlin:kotlin-stdlib:2.4.20
+         project ':app' > com.google.android.libraries.places:places:5.3.0 > com.squareup.okio:okio:3.4.0 > com.squareup.okio:okio-jvm:3.4.0
+      > No cached version of org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.0 available for offline mode.
+      > No cached version of org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.0 available for offline mode.
+   > Could not resolve org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.9.0.
+     Required by:
+         project ':app' > com.google.android.libraries.places:places:5.3.0
+      > No cached version of org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.9.0 available for offline mode.
+      > No cached version of org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.9.0 available for offline mode.
+> There are 2 more failures with identical causes.
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights from a Build Scan (powered by Develocity).
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 8s
+7 actionable tasks: 1 executed, 6 up-to-date

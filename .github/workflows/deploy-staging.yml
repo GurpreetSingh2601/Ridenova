@@ -1,0 +1,29 @@
+name: Authorized staging deployment
+on: workflow_dispatch
+permissions:
+  contents: read
+concurrency:
+  group: staging-deploy
+  cancel-in-progress: false
+jobs:
+  verify:
+    uses: ./.github/workflows/verify.yml
+  deploy:
+    needs: verify
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Deploy exact verified revision and wait for both services
+        env:
+          RIDENOVA_STAGING_ORIGIN: ${{ vars.RIDENOVA_STAGING_ORIGIN }}
+          RENDER_API_DEPLOY_HOOK: ${{ secrets.RENDER_API_DEPLOY_HOOK }}
+          RENDER_WORKER_DEPLOY_HOOK: ${{ secrets.RENDER_WORKER_DEPLOY_HOOK }}
+          DEPLOY_COMMIT: ${{ github.sha }}
+        run: python verification/deploy-staging.py
+      - env:
+          RIDENOVA_STAGING_ORIGIN: ${{ vars.RIDENOVA_STAGING_ORIGIN }}
+        run: python verification/staging-smoke.py "$RIDENOVA_STAGING_ORIGIN"

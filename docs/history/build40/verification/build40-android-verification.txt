@@ -1,0 +1,13 @@
+RideNova Build 40 Android verification
+Date: 2026-09-22 UTC
+
+PASS: python3 verification/android-source-preflight.py
+  Passenger/Driver manifests parse; Kotlin/KTS delimiters balance; version,
+  permission, foreground-service, HTTP-construction and retry invariants present.
+
+Passenger and Driver Gradle compilation: BLOCKED, not passed.
+Attempted Gradle wrapper build, but this restricted environment could not reach
+the Gradle 9.6 distribution URL. No APK or successful compilation is claimed.
+Required follow-up: run gradlew.bat clean assembleDebug in Passenger and Driver
+on the configured Windows/Android SDK machine.
+

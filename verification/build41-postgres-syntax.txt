@@ -1,0 +1,12 @@
+Parsed migration: 001_build40_baseline.sql
+Parsed migration: 002_staging_operations.sql
+Parsed constant operations SQL: operations.py
+Parsed constant operations SQL: migrate.py
+Parsed constant operations SQL: tools/import_sqlite.py
+Parsed constant operations SQL: tools/backup_restore.py
+...................................................................................................................................................
+----------------------------------------------------------------------
+Ran 147 tests in 26.533s
+
+OK
+Parsed 210 distinct executed domain statements. PostgreSQL execution still required.

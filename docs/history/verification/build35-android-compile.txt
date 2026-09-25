@@ -1,0 +1,16 @@
+Build 35 Android verification attempt
+=====================================
+
+Commands attempted in both Android projects:
+
+    ./gradlew :app:compileDebugKotlin --stacktrace
+
+Result: the Gradle wrapper tried to download
+https://services.gradle.org/distributions/gradle-9.6.0-bin.zip, but this
+execution environment rejected the outbound connection with
+java.net.SocketException: Network is unreachable.
+
+This is an environment/tooling limitation, not an Android compiler result.
+Backend, Python syntax, Android XML and Admin JavaScript checks are recorded
+separately. Run VERIFY_ANDROID.ps1 or Gradle sync/build in Android Studio on a
+machine with Gradle/Maven network access before installing the APKs.

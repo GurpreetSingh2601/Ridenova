@@ -1,0 +1,1 @@
+PASS: 7 Admin status assertions using the shipped scripts and minimal DOM stub (not browser rendering).

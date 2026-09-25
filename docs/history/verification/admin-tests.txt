@@ -1,0 +1,3 @@
+HISTORICAL BUILD 29 RECORD — not a Build 30 test result. See ../VERIFICATION.md (Build 30 root).
+
+PASS: Admin DOM + live HTTP integration: dashboard, search, safe rendering, 4 reviews, driver approval/suspension, CSV export.

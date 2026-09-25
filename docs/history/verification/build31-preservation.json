@@ -1,0 +1,27 @@
+{
+  "base": "Build 30",
+  "missing_files": [],
+  "changed_files": [
+    "VERIFICATION.md",
+    "DEVICE_ACCEPTANCE.md",
+    "START_HERE.md",
+    "RideNovaDriver_v0_7_Build25_NavigationBeta/app/build.gradle.kts",
+    "RideNovaDriver_v0_7_Build25_NavigationBeta/app/src/main/java/com/ridenova/driver/navigation/DriverRoadRoutes.kt",
+    "RideNovaDriver_v0_7_Build25_NavigationBeta/app/src/main/java/com/ridenova/driver/ui/FleetAccess.kt",
+    "RideNovaDriver_v0_7_Build25_NavigationBeta/app/src/main/java/com/ridenova/driver/ui/DriverApp.kt",
+    "RideNovaDriver_v0_7_Build25_NavigationBeta/app/src/main/java/com/ridenova/driver/ui/FleetOnboarding.kt",
+    "RideNovaDriver_v0_7_Build25_NavigationBeta/app/src/main/java/com/ridenova/driver/ui/theme/Theme.kt",
+    "RideNovaPassenger_v0_23_Build23_Major/app/build.gradle.kts",
+    "RideNovaPassenger_v0_23_Build23_Major/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt"
+  ],
+  "new_files": [
+    "DEVICE_ACCEPTANCE_BUILD_30.md",
+    "START_HERE_BUILD_30.md",
+    "UI_REVIEW_BUILD_31.md",
+    "VERIFICATION_BUILD_30.md",
+    "verification/build31-android-attempt.txt",
+    "verification/build31-backend-tests.txt",
+    "verification/build31-other-checks.txt",
+    "verification/build31-preservation.json"
+  ]
+}

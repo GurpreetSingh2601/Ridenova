@@ -1,0 +1,56 @@
+name: RideNova verification
+on: [push, pull_request, workflow_dispatch, workflow_call]
+permissions:
+  contents: read
+jobs:
+  shared-api:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: disposable-ci-only
+          POSTGRES_DB: ridenova_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: pip install -r Passenger/backend/requirements.txt
+      - run: python VERIFY_BUILD_41.py
+      - run: python verification/gunicorn-smoke.py
+      - name: PostgreSQL concurrency, migration and restore
+        env:
+          RIDENOVA_TEST_DATABASE_URL: postgresql://postgres:disposable-ci-only@localhost:5432/ridenova_test
+          RIDENOVA_TEST_RESTORE_DATABASE_URL: postgresql://postgres:disposable-ci-only@localhost:5432/ridenova_restore_test
+          PGPASSWORD: disposable-ci-only
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client-16
+          createdb -h localhost -U postgres ridenova_restore_test
+          python verification/postgres-integration.py
+  android:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        app: [Passenger, Driver]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+      - run: sdkmanager 'platforms;android-37' 'build-tools;37.0.0'
+      - working-directory: ${{ matrix.app }}
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug assembleStaging -PRIDENOVA_STAGING_API_BASE_URL=https://staging.example.invalid
+      # Compilation placeholder only; APKs using example.invalid are not distributable.

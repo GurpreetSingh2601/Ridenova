@@ -1,0 +1,1 @@
+PASS: YAML parses: render.yaml, .github/workflows/verify.yml, .github/workflows/deploy-staging.yml

@@ -1,0 +1,40 @@
+{
+  "base": "Build 31",
+  "missing_files": [],
+  "changed_files": [
+    "START_HERE.md",
+    "DEVICE_ACCEPTANCE.md",
+    "VERIFICATION.md",
+    "RideNovaDriver_v0_7_Build25_NavigationBeta/app/build.gradle.kts",
+    "RideNovaDriver_v0_7_Build25_NavigationBeta/app/src/main/AndroidManifest.xml",
+    "RideNovaDriver_v0_7_Build25_NavigationBeta/app/src/main/java/com/ridenova/driver/MainActivity.kt",
+    "RideNovaDriver_v0_7_Build25_NavigationBeta/app/src/main/java/com/ridenova/driver/ui/DriverApp.kt",
+    "RideNovaDriver_v0_7_Build25_NavigationBeta/app/src/main/java/com/ridenova/driver/ui/DriverViewModel.kt",
+    "RideNovaDriver_v0_7_Build25_NavigationBeta/app/src/main/java/com/ridenova/driver/ui/FleetAccess.kt",
+    "RideNovaDriver_v0_7_Build25_NavigationBeta/app/src/main/java/com/ridenova/driver/model/DriverModels.kt",
+    "RideNovaDriver_v0_7_Build25_NavigationBeta/app/src/main/java/com/ridenova/driver/data/DriverHttpApi.kt",
+    "RideNovaDriver_v0_7_Build25_NavigationBeta/app/src/main/java/com/ridenova/driver/data/RemoteDriverRepository.kt",
+    "RideNovaDriver_v0_7_Build25_NavigationBeta/app/src/main/java/com/ridenova/driver/location/DriverLocationService.kt",
+    "RideNovaPassenger_v0_23_Build23_Major/app/build.gradle.kts",
+    "RideNovaPassenger_v0_23_Build23_Major/backend/fleet29.py",
+    "RideNovaPassenger_v0_23_Build23_Major/backend/server.py",
+    "RideNovaPassenger_v0_23_Build23_Major/backend/test_server.py",
+    "RideNovaPassenger_v0_23_Build23_Major/backend/admin/index.html"
+  ],
+  "new_files": [
+    "CHANGES_BUILD_31_1.md",
+    "DEVICE_ACCEPTANCE_BUILD_31.md",
+    "RideNovaDriver_v0_7_Build25_NavigationBeta/app/src/main/java/com/ridenova/driver/location/DriverAlerts.kt",
+    "RideNovaDriver_v0_7_Build25_NavigationBeta/app/src/main/java/com/ridenova/driver/location/DriverOverlay.kt",
+    "RideNovaDriver_v0_7_Build25_NavigationBeta/app/src/main/java/com/ridenova/driver/ui/DriverAlertSettings.kt",
+    "RideNovaPassenger_v0_23_Build23_Major/backend/test_build31_1.py",
+    "START_HERE_BUILD_31.md",
+    "VERIFICATION_BUILD_31.md",
+    "verification/admin-status-test.cjs",
+    "verification/build31_1-admin-render.txt",
+    "verification/build31_1-android-attempt.txt",
+    "verification/build31_1-backend-tests.txt",
+    "verification/build31_1-schedule.txt",
+    "verification/build31_1-syntax.txt"
+  ]
+}

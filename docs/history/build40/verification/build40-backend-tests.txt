@@ -1,0 +1,21 @@
+RideNova Build 40 backend regression
+Historical consolidated run below. Latest booking correction: 137 tests PASS;
+see build40-booking-fix-tests.txt for full output.
+Date: 2026-09-22 UTC
+Command: python3 RUN_TESTS.py
+Result: PASS
+Ran 136 tests in 56.269s (final integrated run)
+Final unittest status: OK
+
+Coverage includes authentication, persistence, scheduling, fare/GST balance,
+quote-token idempotency, simultaneous driver acceptance, Radar/exclusive offers,
+stale GPS, eligibility, active-trip recovery, duplicate action/event/earning
+protection, staff RBAC/sessions/audit, selected-route preservation and explicit
+decline suppression.
+
+PASS: shared server process started against a temporary database.
+PASS: GET /health returned status ok, version 40.0, build 40.
+PASS: GET /admin returned successfully.
+
+PASS: final archive contains all required deliverables and excludes build/cache files.
+PASS: unzip CRC test reported no errors; maximum archived path is 101 characters.

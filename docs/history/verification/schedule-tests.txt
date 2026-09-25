@@ -1,0 +1,4 @@
+HISTORICAL BUILD 29 RECORD — not a Build 30 test result. See ../VERIFICATION.md (Build 30 root).
+
+PASS: javac + java ScheduleTimeTest
+9 scheduling date/time checks passed

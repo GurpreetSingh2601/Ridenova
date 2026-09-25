@@ -1,0 +1,191 @@
+HISTORICAL BUILD 29 RECORD — not a Build 30 test result. See ../VERIFICATION.md (Build 30 root).
+
+/workspace/scratch/cbd113be90ec/work/RideNova_Build29/RideNovaDriver_v0_7_Build25_NavigationBeta/app/src/main/java/com/ridenova/driver/ui/DriverViewModel.kt:501: Warning: No need to call super.onCleared; the super method is defined to be empty [EmptySuperCall]
+        super.onCleared()
+              ~~~~~~~~~
+
+   Explanation for issues of type "EmptySuperCall":
+   For methods annotated with @EmptySuper, overriding methods should not also
+   call the super implementation, either because it is empty, or perhaps it
+   contains code not intended to be run when the method is overridden.
+
+/workspace/scratch/cbd113be90ec/work/RideNova_Build29/RideNovaDriver_v0_7_Build25_NavigationBeta/app/src/main/java/com/ridenova/driver/data/DriverSessionStore.kt:26: Warning: Consider using apply() instead; commit writes its data to persistent storage immediately, whereas apply will handle it in the background [ApplySharedPref]
+        prefs.edit().putString("session", json.toString()).commit()
+                                                           ~~~~~~~~
+
+   Explanation for issues of type "ApplySharedPref":
+   Consider using apply() instead of commit on shared preferences. Whereas
+   commit blocks and writes its data to persistent storage immediately, apply
+   will handle it in the background.
+
+/workspace/scratch/cbd113be90ec/work/RideNova_Build29/RideNovaDriver_v0_7_Build25_NavigationBeta/app/build.gradle.kts:72: Warning: A newer version of androidx.core:core-ktx than 1.17.0 is available: 1.19.0 [GradleDependency]
+    implementation("androidx.core:core-ktx:1.17.0")
+                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspace/scratch/cbd113be90ec/work/RideNova_Build29/RideNovaDriver_v0_7_Build25_NavigationBeta/app/build.gradle.kts:74: Warning: A newer version of androidx.lifecycle:lifecycle-runtime-ktx than 2.10.0 is available: 2.11.0 [GradleDependency]
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.10.0")
+                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspace/scratch/cbd113be90ec/work/RideNova_Build29/RideNovaDriver_v0_7_Build25_NavigationBeta/app/build.gradle.kts:75: Warning: A newer version of androidx.lifecycle:lifecycle-runtime-compose than 2.10.0 is available: 2.11.0 [GradleDependency]
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.10.0")
+                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspace/scratch/cbd113be90ec/work/RideNova_Build29/RideNovaDriver_v0_7_Build25_NavigationBeta/app/build.gradle.kts:76: Warning: A newer version of androidx.lifecycle:lifecycle-viewmodel-compose than 2.10.0 is available: 2.11.0 [GradleDependency]
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.10.0")
+                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspace/scratch/cbd113be90ec/work/RideNova_Build29/RideNovaDriver_v0_7_Build25_NavigationBeta/app/build.gradle.kts:81: Warning: A newer version of androidx.navigation:navigation-compose than 2.10.0 is available: 2.10.1 [GradleDependency]
+    implementation("androidx.navigation:navigation-compose:2.10.0")
+                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspace/scratch/cbd113be90ec/work/RideNova_Build29/RideNovaDriver_v0_7_Build25_NavigationBeta/app/build.gradle.kts:84: Warning: A newer version of com.google.android.gms:play-services-maps than 19.2.0 is available: 20.0.0 [GradleDependency]
+    implementation("com.google.android.gms:play-services-maps:19.2.0")
+                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspace/scratch/cbd113be90ec/work/RideNova_Build29/RideNovaDriver_v0_7_Build25_NavigationBeta/app/build.gradle.kts:85: Warning: A newer version of com.google.android.gms:play-services-location than 21.3.0 is available: 21.4.0 [GradleDependency]
+    implementation("com.google.android.gms:play-services-location:21.3.0")
+                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+   Explanation for issues of type "GradleDependency":
+   This detector looks for usages of libraries where the version you are using
+   is not the current stable release. Using older versions is fine, and there
+   are cases where you deliberately want to stick with an older version.
+   However, you may simply not be aware that a more recent version is
+   available, and that is what this lint check helps find.
+
+/workspace/scratch/cbd113be90ec/work/RideNova_Build29/RideNovaDriver_v0_7_Build25_NavigationBeta/app/src/main/java/com/ridenova/driver/location/DriverLocationService.kt:116: Warning: Unnecessary; SDK_INT is always >= 26 [ObsoleteSdkInt]
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+   Explanation for issues of type "ObsoleteSdkInt":
+   This check flags version checks that are not necessary, because the
+   minSdkVersion (or surrounding known API level) is already at least as high
+   as the version checked for.
+
+   Similarly, it also looks for resources in -vNN folders, such as values-v14
+   where the version qualifier is less than or equal to the minSdkVersion,
+   where the contents should be merged into the best folder.
+
+/workspace/scratch/cbd113be90ec/work/RideNova_Build29/RideNovaDriver_v0_7_Build25_NavigationBeta/app/src/main/java/com/ridenova/driver/ui/FleetOnboarding.kt:90: Hint: Prefer mutableIntStateOf instead of mutableStateOf [AutoboxingStateCreation from androidx.compose.runtime]
+    var uploadRevision by remember { mutableStateOf(0) }
+                                     ~~~~~~~~~~~~~~
+
+   Explanation for issues of type "AutoboxingStateCreation":
+   Calling mutableStateOf<T>() when T is either backed by a primitive type on
+   the JVM or is a value class results in a state implementation that requires
+   all state values to be boxed. This usually causes an additional allocation
+   for each state write, and adds some additional work to auto-unbox values
+   when reading the value of the state. Instead, prefer to use a specialized
+   primitive state implementation for Int, Long, Float, and Double when the
+   state does not need to track null values and does not override the default
+   SnapshotMutationPolicy. See mutableIntStateOf(), mutableLongStateOf(),
+   mutableFloatStateOf(), and mutableDoubleStateOf() for more information.
+
+   Vendor: Jetpack Compose
+   Identifier: androidx.compose.runtime
+   Feedback: https://issuetracker.google.com/issues/new?component=612128
+
+/workspace/scratch/cbd113be90ec/work/RideNova_Build29/RideNovaDriver_v0_7_Build25_NavigationBeta/app/src/main/res/xml/backup_rules.xml:2: Warning: The resource R.xml.backup_rules appears to be unused [UnusedResources]
+<full-backup-content />
+~~~~~~~~~~~~~~~~~~~~~~~
+/workspace/scratch/cbd113be90ec/work/RideNova_Build29/RideNovaDriver_v0_7_Build25_NavigationBeta/app/src/main/res/drawable-nodpi/ridenova_driver_logo.png: Warning: The resource R.drawable.ridenova_driver_logo appears to be unused [UnusedResources]
+/workspace/scratch/cbd113be90ec/work/RideNova_Build29/RideNovaDriver_v0_7_Build25_NavigationBeta/app/src/main/res/values/strings.xml:2: Warning: The resource R.string.app_name appears to be unused [UnusedResources]
+    <string name="app_name">RideNova Driver</string>
+            ~~~~~~~~~~~~~~~
+
+   Explanation for issues of type "UnusedResources":
+   Unused resources make applications larger and slow down builds.
+
+
+   The unused resource check can ignore tests. If you want to include
+   resources that are only referenced from tests, consider packaging them in a
+   test source set instead.
+
+   You can include test sources in the unused resource check by setting the
+   system property lint.unused-resources.include-tests=true, and to exclude
+   them (usually for performance reasons), use
+   lint.unused-resources.exclude-tests=true.
+
+   Available options:
+
+   **skip-libraries** (default is true):
+   Whether the unused resource check should skip reporting unused resources in libraries.
+
+   Many libraries will declare resources that are part of the library surface; other modules depending on the library will also reference the resources. To avoid reporting all these resources as unused (in the context of a library), the unused resource check normally skips reporting unused resources in libraries. Instead, run the unused resource check on the consuming app module (along with `checkDependencies=true`).
+
+   However, there are cases where you want to check that all the resources declared in a library are used; in that case, you can disable the skip option.
+
+   To configure this option, use a `lint.xml` file with an <option> like this:
+
+   ```xml
+   <lint>
+       <issue id="UnusedResources">
+           <option name="skip-libraries" value="true" />
+       </issue>
+   </lint>
+   ```
+
+/workspace/scratch/cbd113be90ec/work/RideNova_Build29/RideNovaDriver_v0_7_Build25_NavigationBeta/app/src/main/java/com/ridenova/driver/ui/DriverApp.kt:867: Warning: Use the KTX extension function String.toUri instead? [UseKtx]
+                            Uri.parse("package:${context.packageName}"))
+                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/workspace/scratch/cbd113be90ec/work/RideNova_Build29/RideNovaDriver_v0_7_Build25_NavigationBeta/app/src/main/java/com/ridenova/driver/data/DriverProfileStore.kt:17: Warning: Use the KTX extension function SharedPreferences.edit instead? [UseKtx]
+        prefs.edit().putString("name", profile.name.trim())
+        ~~~~~~~~~~~~
+/workspace/scratch/cbd113be90ec/work/RideNova_Build29/RideNovaDriver_v0_7_Build25_NavigationBeta/app/src/main/java/com/ridenova/driver/data/DriverRepository.kt:87: Warning: Use the KTX extension function SharedPreferences.edit instead? [UseKtx]
+        preferences.edit().putString("trips", array.toString()).apply()
+        ~~~~~~~~~~~~~~~~~~
+/workspace/scratch/cbd113be90ec/work/RideNova_Build29/RideNovaDriver_v0_7_Build25_NavigationBeta/app/src/main/java/com/ridenova/driver/data/DriverSessionStore.kt:26: Warning: Use the KTX extension function SharedPreferences.edit instead? [UseKtx]
+        prefs.edit().putString("session", json.toString()).commit()
+        ~~~~~~~~~~~~
+
+   Explanation for issues of type "UseKtx":
+   The Android KTX libraries decorates the Android platform SDK as well as
+   various libraries with more convenient extension functions available from
+   Kotlin, allowing you to use default parameters, named parameters, and
+   more.
+
+   Available options:
+
+   **remove-defaults** (default is true):
+   Whether to skip arguments that match the defaults provided by the extension.
+
+   Extensions often provide default values for some of the parameters. For example:
+   ```kotlin
+   fun Path.readLines(charset: Charset = Charsets.UTF_8): List<String> { return Files.readAllLines(this, charset) }
+   ```
+   This lint check will by default automatically omit parameters that match the default, so if your code was calling
+
+   ```kotlin
+   Files.readAllLines(file, Charset.UTF_8)
+   ```
+   lint would replace this with
+   ```kotlin
+   file.readLines()
+   ```
+   rather than
+
+   ```kotlin
+   file.readLines(Charset.UTF_8
+   ```
+   You can turn this behavior off using this option.
+
+   To configure this option, use a `lint.xml` file with an <option> like this:
+
+   ```xml
+   <lint>
+       <issue id="UseKtx">
+           <option name="remove-defaults" value="true" />
+       </issue>
+   </lint>
+   ```
+
+   **require-present** (default is true):
+   Whether to only offer extensions already available.
+
+   This option lets you only have lint suggest extension replacements if those extensions are already available on the class path (in other words, you're already depending on the library containing the extension method.)
+
+   To configure this option, use a `lint.xml` file with an <option> like this:
+
+   ```xml
+   <lint>
+       <issue id="UseKtx">
+           <option name="require-present" value="true" />
+       </issue>
+   </lint>
+   ```
+
+0 errors, 17 warnings, 1 hint

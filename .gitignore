@@ -1,0 +1,13 @@
+**/__pycache__/
+**/*.pyc
+**/*.sqlite*
+**/*.db
+**/*.dump
+**/.env
+**/.env.*
+**/local.properties
+**/.gradle/
+**/build/
+backups/
+import-report.json
+.idea/
