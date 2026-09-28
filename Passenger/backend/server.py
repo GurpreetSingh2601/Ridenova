@@ -338,7 +338,7 @@ class Service:
             # Preserve the card's original position when the default changes. The
             # checkmark/highlight belongs to the selection, not the list order.
             rows = db.execute('SELECT id,type,brand,last4,expiry_month,expiry_year,is_default FROM payment_methods '
-                              'WHERE passenger_id=? ORDER BY rowid', (owner,)).fetchall()
+                              'WHERE passenger_id=? ORDER BY created_ms,id', (owner,)).fetchall()
             return {'paymentMethods': [self.payment_json(row) for row in rows], 'developmentOnly': True,
                     'notice': 'References only; no real card number, CVV or charge is stored'}
 
@@ -356,8 +356,13 @@ class Service:
             if count >= 5:
                 fail(409, 'PAYMENT_METHOD_LIMIT', 'Remove a payment method before adding another')
             method_id, is_default = 'pm_' + secrets.token_hex(10), 1 if count == 0 else 0
+            # Use a strictly increasing per-passenger timestamp so the visible order
+            # remains the order added even when two cards arrive in the same millisecond.
+            last_created = db.execute('SELECT MAX(created_ms) FROM payment_methods WHERE passenger_id=?',
+                                      (owner,)).fetchone()[0]
+            created_ms = max(self.clock(), (last_created or 0) + 1)
             db.execute('INSERT INTO payment_methods VALUES (?,?,?,?,?,?,?,?,?)',
-                       (method_id, owner, 'CARD', brand, last4, month, year, is_default, self.clock()))
+                       (method_id, owner, 'CARD', brand, last4, month, year, is_default, created_ms))
             row = (method_id, 'CARD', brand, last4, month, year, is_default)
             return self.payment_json(row)
 
@@ -377,7 +382,7 @@ class Service:
                 fail(409, 'LAST_PAYMENT_METHOD', 'Keep at least one development payment method')
             db.execute('DELETE FROM payment_methods WHERE id=?', (method_id,))
             if row[6]:
-                replacement = db.execute('SELECT id FROM payment_methods WHERE passenger_id=? ORDER BY created_ms LIMIT 1', (owner,)).fetchone()
+                replacement = db.execute('SELECT id FROM payment_methods WHERE passenger_id=? ORDER BY created_ms,id LIMIT 1', (owner,)).fetchone()
                 db.execute('UPDATE payment_methods SET is_default=1 WHERE id=?', (replacement[0],))
             return {'removed': True, 'id': method_id}
 

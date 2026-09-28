@@ -109,6 +109,22 @@ class PostgresDispatchTests(legacy.Build35Tests):
 class PostgresMigrationTests(unittest.TestCase):
     def setUp(self): empty(DATABASE)
 
+    def test_payment_methods_load_and_keep_added_order(self):
+        # Exercise the same endpoint logic used by the staging payment screen.
+        service = Service(DATABASE, clock=lambda: 1_800_000_000_000)
+        challenge = service.request_otp({'phone': '+16045550123'})
+        account = service.verify_otp({'challengeId': challenge['challengeId'],
+                                      'code': challenge['developmentCode']}, None)
+        owner = account['passenger']['id']
+        first = service.payment_methods(owner)['paymentMethods'][0]
+        second = service.add_payment_method(owner, {'brand': 'Mastercard', 'last4': '4444',
+                                                     'expiryMonth': 10, 'expiryYear': 2032})
+        third = service.add_payment_method(owner, {'brand': 'Amex', 'last4': '1234',
+                                                    'expiryMonth': 11, 'expiryYear': 2033})
+        service.update_payment_method(owner, third['id'], 'default')
+        self.assertEqual([item['id'] for item in Service(DATABASE).payment_methods(owner)['paymentMethods']],
+                         [first['id'], second['id'], third['id']])
+
     def test_migrations_reapply_without_changes(self):
         apply(DATABASE); check(DATABASE)
         with psycopg.connect(DATABASE) as db:
