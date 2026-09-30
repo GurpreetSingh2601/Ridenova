@@ -20,6 +20,7 @@ import test_build35 as legacy
 from database import request_lock
 from migrate import apply, check
 from server import Service
+from settings import Settings
 from test_build42 import FakeStripe
 from staff38 import Staff
 from tools.import_sqlite import import_database
@@ -135,6 +136,7 @@ class PostgresMigrationTests(unittest.TestCase):
         now = 1_800_000_000_000
         service = Service(DATABASE, clock=lambda: now)
         service.finance.provider = FakeStripe()
+        service.settings = Settings('staging', DATABASE, 'https://staging.example')
         with service.connect() as db:
             db.execute('INSERT INTO passengers(id,phone,created_ms,updated_ms) VALUES (?,?,?,?)',
                        ('owner42', '+16045550142', now, now))
@@ -154,6 +156,7 @@ class PostgresMigrationTests(unittest.TestCase):
             service.finance.completed(db, ride)
         restarted = Service(DATABASE, clock=lambda:now)
         restarted.finance.provider = service.finance.provider
+        restarted.settings = service.settings
         with restarted.connect() as db:
             restarted.finance.completed(db, ride)
         self.assertEqual(restarted.finance.authorize('owner42',ride['id'])['status'],'requires_capture')
