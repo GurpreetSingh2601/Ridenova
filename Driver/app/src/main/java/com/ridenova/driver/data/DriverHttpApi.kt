@@ -80,7 +80,7 @@ class DriverHttpApi(private val baseUrl: String, private val devToken: String, p
                 if (code !in 200..299) {
                     val message = runCatching { JSONObject(content).optString("message") }.getOrNull()
                     if (code == 404 && (path.startsWith("v2/fleet/auth/") || path.endsWith("login-details") || path.endsWith("logout"))) {
-                        throw DriverApiException(code, "SERVER_UPGRADE_REQUIRED", "This server does not support current Driver access. Stop the older server and start the shared backend included with Build 41 using your existing database.")
+                        throw DriverApiException(code, "SERVER_UPGRADE_REQUIRED", "This server does not support current Driver access. Stop the older server and start the shared backend included with Build 42 using your existing database.")
                     }
                     throw DriverApiException(code, runCatching { JSONObject(content).optString("code") }.getOrDefault(""),
                         message?.takeIf { it.isNotBlank() } ?: "Driver API failed (HTTP $code)")

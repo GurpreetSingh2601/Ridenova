@@ -1,6 +1,6 @@
 # RideNova development rules
 
-Updated for Build 41 staging candidate on 2026-09-25. Preserve this file in every later build.
+Updated for Build 42 staging candidate on 2026-09-28. Preserve this file in every later build.
 
 ## Architecture
 
@@ -26,7 +26,7 @@ Updated for Build 41 staging candidate on 2026-09-25. Preserve this file in ever
 
 ## Required testing
 
-- Run `python VERIFY_BUILD_41.py`.
+- Run `python VERIFY_BUILD_42.py`.
 - Require PostgreSQL concurrency, import and restore tests in `verification/postgres-integration.py`; SQLite and SQL syntax tests are not substitutes.
 - Require matching API/worker revision and fresh heartbeat at `/ready` before inviting staging testers.
 - Run all backend regression tests and add a targeted test for every regression.
@@ -37,13 +37,13 @@ Updated for Build 41 staging candidate on 2026-09-25. Preserve this file in ever
 - Test the final release from a short Windows path and verify ZIP CRC/inventory.
 - Record exactly what ran and what could not. Source preflight is not compilation; development tests are not production approval.
 
-## Known Build 41 boundaries
+## Known Build 42 boundaries
 
-- The CLI is development-only. Gunicorn/WSGI and invitation restrictions are implemented for controlled staging; deployment is not yet verified or authorized.
-- PostgreSQL runtime validation and Build 41 Android compilation are blocked in this workspace. Do not label this candidate as the completed milestone.
-- Staging has conservative global request serialization/rate caps. It is not load-tested for commercial dispatch.
+- The CLI is development-only. Gunicorn/WSGI and invitation restrictions serve controlled staging. Build 42 is not yet deployed or provider verified.
+- PostgreSQL runtime validation and Build 42 Android compilation are blocked in this workspace. Do not label this candidate as the completed milestone.
+- Staging has conservative global request serialization/rate caps. Build 42 batches rate checks and logs phase timings; do not remove the request gate until atomic dispatch has independent guarantees.
 - Managed backups, monitoring notifications and CI/CD account configuration require authorized setup and verification.
-- OTP delivery, payments, payouts and identity/document verification are simulations.
+- OTP delivery, payouts and identity/document verification remain simulations. Stripe test payments are implemented behind test-key configuration; no live charge path is enabled.
 - Passenger-selected Google routes are strictly validated and quote-bound, but production should request routes server-side.
 - Android compilation and physical-device acceptance remain required for the new staging variants on a configured workstation or CI.
 - BC launch, privacy, insurance, transportation, tax, worker-classification and accessibility obligations need qualified review.
@@ -51,7 +51,14 @@ Updated for Build 41 staging candidate on 2026-09-25. Preserve this file in ever
 ## Product strategy through v1.0
 
 - Build 41: authorized Render staging, PostgreSQL migration, secrets, backups/restore, monitoring, CI/CD and rollback, portable toward AWS. Never incur charges without owner authorization.
-- Build 42: payment sandbox, idempotent finance, refunds/payout accounting and boost-rule foundation.
+- Build 42: Stripe test sandbox, idempotent finance, refund/payout accounting design and capped boost-rule foundation.
 - Build 43: trip sharing, emergency improvements and capped platform-funded boost zones. Avoid aggressive passenger surge pricing initially.
 - Builds 44–47: BC compliance, scheduled rides/stops, communication/support, navigation/UX/performance.
 - Builds 48–50: security/full regression, controlled BC beta and v1.0 candidate. Never claim public-launch approval without verification.
+
+## Build 42 finance guardrails
+
+- Only `sk_test_` credentials may configure Stripe; never store provider secret keys in Android, Git or logs. Checkout owns card data.
+- A Stripe test card is distinct from a pre-existing development display reference. Test payments are explicit completed-ride actions; no public charge or payout can occur.
+- Every monetary operation uses fixed idempotency keys, server-owned integer CAD cents, provider verification and unique ledger entries. Reconcile an ambiguous result before a different attempt.
+- A boost is funded by the platform, capped by an atomic reservation, recorded once per ride and does not change the accepted passenger price.

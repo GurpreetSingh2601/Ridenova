@@ -1,6 +1,6 @@
 {
   "private": true,
-  "description": "RideNova Build 41 dependency-free Admin source checks",
+  "description": "RideNova Build 42 dependency-free Admin source checks",
   "scripts": {
     "test": "node admin-source-test.cjs"
   }

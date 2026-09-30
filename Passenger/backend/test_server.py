@@ -164,7 +164,7 @@ class BackendTests(unittest.TestCase):
                 self.assertEqual(response.headers['Cache-Control'], 'no-store')
                 return json.load(response)
         try:
-            self.assertEqual(call('/health', session=False, authenticated=False)['version'], '41.0')
+            self.assertEqual(call('/health', session=False, authenticated=False)['version'], '42.0')
             with self.assertRaises(urllib.error.HTTPError) as error:
                 call('/v1/passenger/rides', session=False)
             self.assertEqual(error.exception.code, 401)

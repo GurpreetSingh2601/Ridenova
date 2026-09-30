@@ -43,16 +43,21 @@ def import_database(source, target, report_path):
             report = {'sourceSha256': hashlib.sha256(snapshot.read_bytes()).hexdigest(), 'tables': {}}
             with request_lock(target), psycopg.connect(target) as db:
                 target_tables = {r[0] for r in db.execute("SELECT tablename FROM pg_tables WHERE schemaname='public'")}
-                domain = target_tables - {'schema_migrations', 'rate_limits', 'operational_heartbeats', 'import_receipts'}
-                if set(tables) != domain:
-                    raise RuntimeError('Source must be the complete accepted Build 40 schema; table set differs')
+                operational = {'schema_migrations', 'rate_limits', 'operational_heartbeats', 'import_receipts'}
+                baseline = Path(__file__).resolve().parents[1] / 'migrations/001_build40_baseline.sql'
+                finance = Path(__file__).resolve().parents[1] / 'migrations/003_build42_finance_boost.sql'
+                import re
+                baseline_tables = re.findall(r'CREATE TABLE (\w+)', baseline.read_text())
+                finance_tables = re.findall(r'CREATE TABLE (\w+)', finance.read_text())
+                if not set(baseline_tables) <= set(tables) or set(tables) - set(baseline_tables) - set(finance_tables):
+                    raise RuntimeError('Source must contain complete accepted baseline and only known Build 42 extensions')
+                if set(baseline_tables + finance_tables) != target_tables - operational:
+                    raise RuntimeError('Target table inventory differs from expected migrations')
                 for table in target_tables - {'schema_migrations'}:
                     if db.execute(sql.SQL('SELECT 1 FROM {} LIMIT 1').format(sql.Identifier(table))).fetchone():
                         raise RuntimeError('Target is not empty; refusing to overwrite data')
                 # Versioned baseline lists parent tables before their children.
-                baseline = Path(__file__).resolve().parents[1] / 'migrations/001_build40_baseline.sql'
-                import re
-                ordered = re.findall(r'CREATE TABLE (\w+)', baseline.read_text())
+                ordered = baseline_tables + [table for table in finance_tables if table in tables]
                 for table in ordered:
                     info = copy.execute('PRAGMA table_info("' + table + '")').fetchall()
                     columns = [r[1] for r in info]

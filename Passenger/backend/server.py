@@ -1,4 +1,4 @@
-"""RideNova Build 41 shared API. Python 3.11+.
+"""RideNova Build 42 shared API. Python 3.11+.
 
 This CLI is loopback development only; staging uses wsgi.py with Gunicorn.
 The displayed development OTP does not prove ownership of a real phone number.
@@ -152,6 +152,8 @@ class Service:
         self.fleet = Fleet(self)
         from experience34 import Experience
         self.experience = Experience(self)
+        from finance42 import Finance
+        self.finance = Finance(self)
 
     @staticmethod
     def token_hash(value):
@@ -339,10 +341,14 @@ class Service:
             # checkmark/highlight belongs to the selection, not the list order.
             rows = db.execute('SELECT id,type,brand,last4,expiry_month,expiry_year,is_default FROM payment_methods '
                               'WHERE passenger_id=? ORDER BY created_ms,id', (owner,)).fetchall()
-            return {'paymentMethods': [self.payment_json(row) for row in rows], 'developmentOnly': True,
-                    'notice': 'References only; no real card number, CVV or charge is stored'}
+            provider_ids = {r[0] for r in db.execute('SELECT payment_method_id FROM sandbox_cards WHERE passenger_id=?', (owner,))}
+            return {'paymentMethods': [{**self.payment_json(row), 'developmentOnly': row[0] not in provider_ids}
+                                       for row in rows], 'sandboxEnabled': self.finance.available(),
+                    'developmentOnly': True, 'notice': 'Stripe test cards are tokenized; no real charges or payouts'}
 
     def add_payment_method(self, owner, body):
+        if getattr(self, 'settings', None) and self.settings.environment == 'staging' and self.finance.available():
+            fail(403, 'USE_STRIPE_TEST_SETUP', 'Use Stripe test checkout to add a card')
         brand, last4 = body.get('brand'), body.get('last4')
         month, year = body.get('expiryMonth'), body.get('expiryYear')
         if brand not in ('Visa', 'Mastercard', 'Amex') or not isinstance(last4, str) or not re.fullmatch(r'\d{4}', last4):
@@ -381,6 +387,7 @@ class Service:
             if count <= 1:
                 fail(409, 'LAST_PAYMENT_METHOD', 'Keep at least one development payment method')
             db.execute('DELETE FROM payment_methods WHERE id=?', (method_id,))
+            db.execute('DELETE FROM sandbox_cards WHERE payment_method_id=? AND passenger_id=?', (method_id, owner))
             if row[6]:
                 replacement = db.execute('SELECT id FROM payment_methods WHERE passenger_id=? ORDER BY created_ms,id LIMIT 1', (owner,)).fetchone()
                 db.execute('UPDATE payment_methods SET is_default=1 WHERE id=?', (replacement[0],))
@@ -974,6 +981,7 @@ class Service:
             VALUES (?,?,?,?,?,?,?)''', (
             ride['id'], self.clock(), b['subtotalCents'], b['gstCents'], b['totalCents'],
             b['platformCommissionCents'], b['driverGrossBeforeCostsCents']))
+        self.finance.completed(db, ride)
 
     def admin_overview(self):
         """Read-only development operations: do not expose phone numbers or PINs."""
@@ -1151,7 +1159,7 @@ def make_handler(service):
             fail(403,'FORBIDDEN','Development admin authorization required')
         return staff.authorize(header,permission)
     class Handler(BaseHTTPRequestHandler):
-        server_version = 'RideNova/41.0'
+        server_version = 'RideNova/42.0'
 
         def log_message(self, *_):
             pass  # Do not print addresses, tokens, URLs or request bodies.
@@ -1190,6 +1198,11 @@ def make_handler(service):
                     self.end_headers()
                     self.wfile.write(html)
                     return
+                if path == '/payments/return' and self.command == 'GET':
+                    html = b'<!doctype html><title>RideNova test payment</title><meta name="viewport" content="width=device-width, initial-scale=1"><body style="background:#10131b;color:white;font:20px system-ui;padding:30px"><h1>Return to RideNova</h1><p>Open the Passenger app and tap Verify test card. No real payment was made.</p></body>'
+                    self.send_response(200); self.send_header('Content-Type','text/html; charset=utf-8')
+                    self.send_header('Cache-Control','no-store'); self.send_header('Content-Length',str(len(html)))
+                    self.end_headers(); self.wfile.write(html); return
                 if self.command in ('POST', 'PATCH'):
                     if self.headers.get('Transfer-Encoding'):
                         fail(400, 'INVALID_BODY', 'Chunked requests are not supported')
@@ -1213,7 +1226,7 @@ def make_handler(service):
                     if not isinstance(body, dict):
                         fail(400, 'INVALID_JSON', 'Expected JSON object')
                 if path == '/health' and self.command == 'GET':
-                    result = {'status': 'ok', 'version': '41.0', 'build': 41, 'developmentOnly': True,
+                    result = {'status': 'ok', 'version': '42.0', 'build': 42, 'developmentOnly': True,
                               'authentication': 'development-otp'}
                 elif path == '/v1/staff/login' and self.command == 'POST':
                     result = staff.login(body)
@@ -1343,6 +1356,8 @@ def make_handler(service):
                         else:fail(404,'NOT_FOUND','Endpoint not found')
                 elif path.startswith('/v1/admin/'):
                     permission=('overview' if path.endswith('/overview') else
+                                'finance.write' if path.startswith('/v1/admin/finance/') and self.command == 'POST' else
+                                'finance.read' if path.startswith('/v1/admin/finance/') else
                                 'support.write' if path.endswith('/status') and 'support-cases' in path else
                                 'support.read' if 'support-cases' in path or path.endswith('/feedback') else
                                 'ride.read' if path.endswith('/rides') else
@@ -1364,6 +1379,27 @@ def make_handler(service):
                             result.pop('driver',None)
                         if 'ride.read' not in permissions:
                             result.pop('rides',None)
+                    elif path == '/v1/admin/finance/summary' and self.command == 'GET':
+                        result = service.finance.summary()
+                    elif path == '/v1/admin/finance/zones' and self.command == 'GET':
+                        result = service.finance.zones()
+                    elif path == '/v1/admin/finance/zones' and self.command == 'POST':
+                        result = service.finance.create_zone(body)
+                    elif path.startswith('/v1/admin/finance/rides/') and path.endswith('/reconcile') and self.command == 'GET':
+                        result = service.finance.reconcile(parts[5])
+                    elif path.startswith('/v1/admin/finance/rides/') and path.endswith('/reconcile') and self.command == 'POST':
+                        result = service.finance.reconcile(parts[5], settle=True)
+                    elif path.startswith('/v1/admin/finance/zones/') and path.endswith('/toggle') and self.command == 'POST':
+                        result = service.finance.toggle_zone(parts[5], body.get('enabled'))
+                    elif path.startswith('/v1/admin/finance/rides/') and self.command == 'POST':
+                        if len(parts) != 7:
+                            fail(404,'NOT_FOUND','Endpoint not found')
+                        elif parts[6] == 'capture':
+                            result = service.finance.capture(parts[5])
+                        elif parts[6] == 'refund':
+                            result = service.finance.refund(parts[5], body.get('requestKey'), body.get('amountCents'))
+                        else:
+                            fail(404,'NOT_FOUND','Endpoint not found')
                     elif path == '/v1/admin/rides' and self.command == 'GET':
                         from urllib.parse import urlsplit,parse_qs
                         params=parse_qs(urlsplit(self.path).query)
@@ -1486,6 +1522,12 @@ def make_handler(service):
                         result = service.change_recent_destination(owner, body)
                     elif path == '/v1/passenger/payment-methods':
                         result = service.add_payment_method(owner, body) if self.command == 'POST' else service.payment_methods(owner)
+                    elif path == '/v1/passenger/payment-methods/setup' and self.command == 'POST':
+                        result = service.finance.start_setup(owner)
+                    elif path == '/v1/passenger/payment-methods/sync' and self.command == 'POST':
+                        result = service.finance.sync_setup(owner, body)
+                    elif path.startswith('/v1/passenger/rides/') and path.endswith('/authorize-test') and self.command == 'POST':
+                        result = service.finance.authorize(owner, path.split('/')[4])
                     elif path.startswith('/v1/passenger/payment-methods/') and self.command == 'POST':
                         parts = path.split('/')
                         if len(parts) == 6 and parts[5] in ('default', 'remove'):
@@ -1523,6 +1565,10 @@ def make_handler(service):
                 status, result = exc.status, {'code': exc.code, 'message': exc.message}
             except ExperienceError as exc:
                 status, result = exc.status, {'code': exc.code, 'message': exc.message}
+            except __import__('finance42').FinanceError as exc:
+                status, result = exc.status, {'code': exc.code, 'message': exc.message}
+            except __import__('sandbox_stripe').ProviderError:
+                status, result = 503, {'code': 'PROVIDER_UNAVAILABLE', 'message': 'Stripe test service unavailable; retry with the same operation'}
             except APIError as exc:
                 status, result = exc.status, {'code': exc.code, 'message': exc.message}
             except Exception:
@@ -1559,7 +1605,7 @@ if __name__ == '__main__':
             stop.wait(5)
     worker = threading.Thread(target=scheduler, daemon=True)
     worker.start()
-    print(f'RideNova Build 41 / Admin v0.8.0 DEVELOPMENT ONLY on http://{args.host}:{args.port}; Trip Radar enabled; no real charges')
+    print(f'RideNova Build 42 / Admin v0.9.0 DEVELOPMENT ONLY on http://{args.host}:{args.port}; Trip Radar enabled; no real charges')
     server = ThreadingHTTPServer((args.host, args.port), make_handler(service))
     try:
         server.serve_forever()

@@ -1,24 +1,15 @@
-# RideNova Build 41: FREE, DISPOSABLE staging preview only.
-# Copy this file to RN41/render.yaml BEFORE creating a NEW Blueprint.
-# It creates one free web service and one free PostgreSQL database.
-# Never sync this over an existing paid RideNova Blueprint: removing its worker
-# can delete that service, and resource plan changes may affect stored data.
-# Free PostgreSQL expires after 30 days. Use synthetic test data only.
-# No background worker is available for free; /ready remains 503, and scheduled
-# dispatch, offer expiry and unattended recovery are not reliable in this preview.
-# Do not call this configuration a completed Build 41 deployment.
+# REVIEW ONLY: creating this Blueprint incurs charges. Owner approval required.
+# Set secrets in Render, never commit them. Initial deployment needs bootstrap.
 services:
   - type: web
-    name: ridenova-free-trial-api
+    name: ridenova-staging-api
     runtime: python
     region: oregon
-    plan: free
+    plan: 0.5c-512mb
     rootDir: Passenger/backend
     buildCommand: pip install -r requirements.txt
-    # Render's free web plan does not support preDeployCommand.
-    # PostgreSQL migrations run once per web process start; migrate.py uses
-    # transactional advisory locking and refuses incompatible versions.
-    startCommand: python migrate.py && gunicorn -c gunicorn.conf.py 'wsgi:create_app()'
+    preDeployCommand: python migrate.py
+    startCommand: gunicorn -c gunicorn.conf.py 'wsgi:create_app()'
     healthCheckPath: /health
     autoDeployTrigger: off
     envVars:
@@ -28,32 +19,62 @@ services:
         value: staging
       - key: DATABASE_URL
         fromDatabase:
-          name: ridenova-free-trial-db
+          name: ridenova-staging-db
           property: connectionString
-      # Fill these three in privately when creating the Blueprint.
-      # The origin must exactly match the HTTPS URL Render gives the service.
       - key: RIDENOVA_PUBLIC_ORIGIN
         sync: false
-      # JSON such as {"+16045550123":"735192"}; use invited test numbers only.
       - key: RIDENOVA_STAGING_TESTERS
         sync: false
-      # Comma-separated invited +1 driver test numbers.
       - key: RIDENOVA_STAGING_DRIVER_PHONES
         sync: false
       - key: RIDENOVA_RATE_SECRET
         generateValue: true
-      # The HTTP listener is behind Render's TLS-terminating reverse proxy.
       - key: FORWARDED_ALLOW_IPS
         value: '*'
+  - type: worker
+    name: ridenova-staging-scheduler
+    runtime: python
+    region: oregon
+    plan: 0.5c-512mb
+    rootDir: Passenger/backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: python worker.py
+    autoDeployTrigger: off
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.11
+      - key: RIDENOVA_ENVIRONMENT
+        value: staging
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ridenova-staging-db
+          property: connectionString
+      - key: RIDENOVA_PUBLIC_ORIGIN
+        fromService:
+          type: web
+          name: ridenova-staging-api
+          envVarKey: RIDENOVA_PUBLIC_ORIGIN
+      - key: RIDENOVA_STAGING_TESTERS
+        fromService:
+          type: web
+          name: ridenova-staging-api
+          envVarKey: RIDENOVA_STAGING_TESTERS
+      - key: RIDENOVA_STAGING_DRIVER_PHONES
+        fromService:
+          type: web
+          name: ridenova-staging-api
+          envVarKey: RIDENOVA_STAGING_DRIVER_PHONES
+      - key: RIDENOVA_RATE_SECRET
+        fromService:
+          type: web
+          name: ridenova-staging-api
+          envVarKey: RIDENOVA_RATE_SECRET
 databases:
-  - name: ridenova-free-trial-db
-    databaseName: ridenova_free_trial
+  - name: ridenova-staging-db
+    databaseName: ridenova_staging
     user: ridenova
     region: oregon
-    plan: free
+    plan: 0.1c-256mb
     postgresMajorVersion: '16'
-    # No diskSizeGB: Free Postgres has its own fixed 1 GB storage limit.
-    # External access is closed. To run interactive Owner bootstrap from a
-    # trusted computer, temporarily allow ONLY that computer's public IP in
-    # Render, run bootstrap privately using the external DB URL, and close it.
+    diskSizeGB: 1
     ipAllowList: []

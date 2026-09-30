@@ -1,4 +1,4 @@
-# Build 41 staff permissions and testing
+# Build 42 staff permissions and testing
 
 The backend is authoritative. The Admin portal exposes workspaces appropriate to the signed-in role, and every request is independently authorized server-side.
 
@@ -75,3 +75,13 @@ staff table and never grants a default Owner. Imported Owner accounts are preser
 7. Sign out and confirm the old token is rejected.
 
 Automated coverage includes bootstrap, creation, RBAC, finance redaction, session revocation, last-owner protection, pagination and audit. Browser rendering still requires manual acceptance.
+
+## Build 42 sandbox finance additions (implemented, source verified)
+
+| Action | Owner | Finance | Operations / Support / Compliance |
+|---|---|---|---|
+| GET `/v1/admin/finance/summary`, `/zones`, ride reconciliation | Yes | Yes | No |
+| POST zone creation/toggle, test capture/refund, settle from provider | Yes | No | No |
+| Passenger test card setup/sync and completed-ride authorize | Passenger account only | No | No |
+
+Owner and Finance should repeat the read/write-denial checks after deployment. Staff creation and access remain backend-enforced; finance actions write staff audit events. A displayed boost award or ledger entry is not a bank settlement or payout.

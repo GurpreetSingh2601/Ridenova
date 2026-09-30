@@ -97,7 +97,7 @@ class Build33Tests(unittest.TestCase):
             except urllib.error.HTTPError as error:
                 return error.code, json.load(error)
         try:
-            self.assertEqual(call('/health')[1]['version'], '41.0')
+            self.assertEqual(call('/health')[1]['version'], '42.0')
             code, account = call('/v2/fleet/auth/register', {'username': 'http.33',
                 'phone': '6045550134', 'password': 'Test-password-33', 'name': 'HTTP Driver',
                 'vehicle': 'Car', 'plate': 'HTTP33', 'category': 'ECONOMY'})

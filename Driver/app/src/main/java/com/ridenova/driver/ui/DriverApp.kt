@@ -122,7 +122,7 @@ fun RideNovaDriverApp(locationGranted: Boolean, viewModel: DriverViewModel = vie
                             onClick = { selectedTab = tab; documents = false; access = false; scope.launch { drawer.close() } })
                     }
                     HorizontalDivider(Modifier.padding(20.dp))
-                    Text("Build 41 · ${BuildConfig.RIDENOVA_ENVIRONMENT}", Modifier.padding(24.dp), style = MaterialTheme.typography.bodySmall)
+                    Text("Build 42 · ${BuildConfig.RIDENOVA_ENVIRONMENT}", Modifier.padding(24.dp), style = MaterialTheme.typography.bodySmall)
                 }
             }
         }) {

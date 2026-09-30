@@ -1,15 +1,15 @@
-RIDENOVA BUILD 41 — CONSOLIDATED STAGING CANDIDATE
+RIDENOVA BUILD 42 — CONSOLIDATED SANDBOX STAGING CANDIDATE
 =========================================================
 
-1. Extract RN41 directly under G:\RideNova or C:\RideNova.
-2. Read START_HERE_BUILD_41.md before starting the backend.
+1. Extract RN42 directly under G:\RideNova or C:\RideNova.
+2. Read START_HERE_BUILD_42.md before deploying or rebuilding apps.
 3. Open Passenger and Driver as separate Android Studio projects.
 4. Preserve your current database; validate a COPY with MIGRATE_SQLITE_COPY.py.
 
-Passenger: 0.33.0-build41
-Driver:    0.18.0-build41
-Backend:  41.0
-Admin:    0.8.0
+Passenger: 0.34.0-build42
+Driver:    0.19.0-build42
+Backend:  42.0
+Admin:    0.9.0
 
 No cloud deployment or charges have been initiated. See test results and gates.
 

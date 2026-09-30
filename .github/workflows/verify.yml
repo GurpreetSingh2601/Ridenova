@@ -23,7 +23,7 @@ jobs:
         with:
           node-version: '24'
       - run: pip install -r Passenger/backend/requirements.txt
-      - run: python VERIFY_BUILD_41.py
+      - run: python VERIFY_BUILD_42.py
       - run: python verification/gunicorn-smoke.py
       - name: PostgreSQL concurrency, migration and restore
         env:

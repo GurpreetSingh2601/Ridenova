@@ -54,7 +54,7 @@ class Build41TransportTests(unittest.TestCase):
         self.settings = Settings('staging', str(Path(self.temp.name)/'db.sqlite'), 'https://test.example',
                                  {'+16045550123': '736291'}, ('+16045550124',), 'a'*40)
         self.migrate = patch('migrate.check'); self.migrate.start(); self.addCleanup(self.migrate.stop)
-        self.rate = patch('operations.allow_request', return_value=True); self.allow = self.rate.start(); self.addCleanup(self.rate.stop)
+        self.rate = patch('operations.allow_requests', return_value=True); self.allow = self.rate.start(); self.addCleanup(self.rate.stop)
         with patch.dict('os.environ', {'RIDENOVA_OWNER_USERNAME': '', 'RIDENOVA_OWNER_PASSWORD': ''}):
             self.app = create_app(self.settings)
         self.addCleanup(self.temp.cleanup)
@@ -74,7 +74,7 @@ class Build41TransportTests(unittest.TestCase):
 
     def test_health_is_liveness_and_readiness_detects_worker_failure(self):
         out = self.call('/health', **{'wsgi.url_scheme': 'http', 'HTTP_HOST': 'internal'})
-        self.assertEqual(out['json']['build'], 41)
+        self.assertEqual(out['json']['build'], 42)
         with patch('operations.ready', return_value=False): self.assertEqual(self.call('/ready')['status'], 503)
         with patch('operations.ready', return_value=True): self.assertEqual(self.call('/ready')['status'], 200)
 

@@ -56,6 +56,7 @@ def create_app(settings=None):
         path = environ.get('PATH_INFO', '/').rstrip('/')
         method = environ.get('REQUEST_METHOD', '')
         status, payload, headers = 200, None, []
+        timings = {}
         try:
             if method not in ('GET', 'POST', 'PATCH'):
                 status, payload = 405, {'code': 'METHOD_NOT_ALLOWED', 'message': 'Unsupported method'}
@@ -68,8 +69,8 @@ def create_app(settings=None):
             elif settings.environment == 'staging' and path not in ('/health', '/ready') and environ.get('wsgi.url_scheme') != 'https':
                 status, payload = 400, {'code': 'HTTPS_REQUIRED', 'message': 'HTTPS is required'}
             elif path == '/health':
-                payload = {'status': 'ok', 'build': 41, 'version': '41.0', 'environment': settings.environment,
-                           'payments': 'simulation', 'publicLaunch': False,
+                payload = {'status': 'ok', 'build': 42, 'version': '42.0', 'environment': settings.environment,
+                           'payments': 'stripe-test-optional', 'publicLaunch': False,
                            'revision': os.environ.get('RENDER_GIT_COMMIT', 'local')}
             elif path == '/ready':
                 from operations import ready
@@ -78,21 +79,29 @@ def create_app(settings=None):
             else:
                 allowed = True
                 if settings.environment == 'staging':
-                    from operations import allow_request
+                    from operations import allow_requests
                     # No untrusted X-Forwarded-For. Bound all unauthenticated traffic
                     # globally, then rate-limit authenticated traffic by token hash.
                     subject = environ.get('HTTP_AUTHORIZATION', '') or 'anonymous'
-                    allowed = allow_request(settings.database, settings.rate_secret, 'api:global', 600)
-                    allowed = allowed and len(subject) <= 300 and allow_request(settings.database, settings.rate_secret, 'api:' + subject, 300)
-                    if path in ('/v1/staff/login', '/v2/fleet/auth/login', '/v1/auth/request-otp', '/v1/auth/verify-otp', '/v2/fleet/auth/register'):
-                        allowed = allowed and allow_request(settings.database, settings.rate_secret, 'auth:' + path, 30)
+                    if len(subject) > 300:
+                        allowed = False
+                    else:
+                        rules = [('api:global', 600, 60), ('api:' + subject, 300, 60)]
+                        if path in ('/v1/staff/login', '/v2/fleet/auth/login', '/v1/auth/request-otp', '/v1/auth/verify-otp', '/v2/fleet/auth/register'):
+                            rules.append(('auth:' + path, 30, 60))
+                        rate_started = time.monotonic()
+                        allowed = allow_requests(settings.database, settings.rate_secret, rules)
+                        timings['rateMs'] = round((time.monotonic()-rate_started)*1000)
                 if not allowed:
                     status, payload = 429, {'code': 'RATE_LIMITED', 'message': 'Too many requests; wait and try again'}
                     headers.append(('Retry-After', '60'))
                 else:
+                    lock_started = time.monotonic()
                     with request_lock(settings.database):
+                        timings['lockWaitMs'] = round((time.monotonic()-lock_started)*1000)
                         response = Dispatch(environ)
                         response.dispatch()
+                    timings['handlerMs'] = round((time.monotonic()-lock_started)*1000) - timings['lockWaitMs']
                     status = response.status
                     headers.extend((k, v) for k, v in response.response_headers if k.lower() != 'x-request-id')
                     data = response.wfile.getvalue()
@@ -109,7 +118,7 @@ def create_app(settings=None):
             headers.append(('Strict-Transport-Security', 'max-age=31536000'))
         # No query strings, bodies, phones, coordinates, tokens or IP addresses.
         log.info(json.dumps({'event': 'request', 'requestId': request_id, 'method': method,
-                             'status': status, 'durationMs': round((time.monotonic()-started)*1000)}))
+                             'status': status, 'durationMs': round((time.monotonic()-started)*1000), **timings}))
         start_response(f'{status} {HTTPStatus(status).phrase}', headers)
         return [data]
     return app

@@ -20,6 +20,7 @@ import test_build35 as legacy
 from database import request_lock
 from migrate import apply, check
 from server import Service
+from test_build42 import FakeStripe
 from staff38 import Staff
 from tools.import_sqlite import import_database
 from tools.backup_restore import backup, restore
@@ -128,7 +129,41 @@ class PostgresMigrationTests(unittest.TestCase):
     def test_migrations_reapply_without_changes(self):
         apply(DATABASE); check(DATABASE)
         with psycopg.connect(DATABASE) as db:
-            self.assertEqual(db.execute('SELECT COUNT(*) FROM schema_migrations').fetchone()[0], 2)
+            self.assertEqual(db.execute('SELECT COUNT(*) FROM schema_migrations').fetchone()[0], 3)
+
+    def test_build42_finance_and_boost_persist_across_services(self):
+        now = 1_800_000_000_000
+        service = Service(DATABASE, clock=lambda: now)
+        service.finance.provider = FakeStripe()
+        with service.connect() as db:
+            db.execute('INSERT INTO passengers(id,phone,created_ms,updated_ms) VALUES (?,?,?,?)',
+                       ('owner42', '+16045550142', now, now))
+        setup = service.finance.start_setup('owner42')
+        service.finance.sync_setup('owner42', {'sessionId': setup['sessionId']})
+        zone = service.finance.create_zone({'label':'CI zone','latitude':49.28,'longitude':-123.12,
+                                           'radiusKm':2,'category':'ECONOMY','startMs':now-1000,
+                                           'endMs':now+1000,'bonusCents':200,'budgetCents':200})
+        service.finance.toggle_zone(zone['id'], True)
+        ride = {'id':'pg_ride42','status':'COMPLETED','requestedAtEpochMs':now,
+                'fleetDriverId':'driver42','draft':{'pickup':{'latitude':49.28,'longitude':-123.12}},
+                'payment':{'methodId':'pm_test42'},
+                'option':{'tier':'ECONOMY','breakdown':{'subtotalCents':5765,'gstCents':288,
+                    'totalCents':6053,'platformCommissionCents':1730,'driverGrossBeforeCostsCents':4035}}}
+        with service.connect() as db:
+            db.execute('INSERT INTO rides VALUES (?,?,?)',(ride['id'],'owner42',json.dumps(ride)))
+            service.finance.completed(db, ride)
+        restarted = Service(DATABASE, clock=lambda:now)
+        restarted.finance.provider = service.finance.provider
+        with restarted.connect() as db:
+            restarted.finance.completed(db, ride)
+        self.assertEqual(restarted.finance.authorize('owner42',ride['id'])['status'],'requires_capture')
+        self.assertEqual(restarted.finance.capture(ride['id'])['status'],'succeeded')
+        restarted.finance.refund(ride['id'],'ci_refund',200)
+        self.assertTrue(restarted.finance.reconcile(ride['id'])['reconciled'])
+        with restarted.connect() as db:
+            self.assertEqual(db.execute('SELECT COUNT(*) FROM boost_awards').fetchone()[0], 1)
+            self.assertEqual(db.execute('SELECT awarded_cents FROM boost_zones WHERE id=?',(zone['id'],)).fetchone()[0], 200)
+            self.assertEqual(db.execute('SELECT COUNT(*) FROM finance_entries WHERE ride_id=?',(ride['id'],)).fetchone()[0], 6)
 
     def test_import_preserves_data_and_refuses_occupied_target(self):
         with tempfile.TemporaryDirectory() as temp:

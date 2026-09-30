@@ -1,8 +1,8 @@
-# RideNova Build 41 API — local and controlled staging contract
+# RideNova Build 42 API — local and controlled staging contract
 
 Passenger Android, Driver Android and Admin use this single shared Python API.
 SQLite is retained for development; staging uses PostgreSQL and the WSGI transport.
-Build 41 reports `version: 41.0` and `build: 41` from
+Build 42 reports `version: 42.0` and `build: 42` from
 `GET /health`.
 
 Staging `/health` includes environment and deployed revision. `/ready` returns
@@ -145,3 +145,18 @@ Driver-authenticated. Returns completed rides assigned to the development driver
 
 ### `POST /v1/driver/location`
 Build 23 extends this endpoint: driver presence also updates the assigned ride's `driverPosition`. During `DRIVER_ASSIGNED`, it refreshes pickup ETA; during `TRIP_STARTED`, it adds `liveTrip` remaining-distance/ETA/progress fields for Passenger polling.
+
+## Build 42 sandbox payments and boost rules
+
+All provider operations require a Stripe `sk_test_` key configured only on the staging backend. Live keys are rejected. No raw card number/CVC reaches RideNova.
+
+- `POST /v1/passenger/payment-methods/setup` creates a Stripe test Checkout setup session URL.
+- `POST /v1/passenger/payment-methods/sync` with `{sessionId}` verifies completed setup and account ownership against Stripe, then adds a tokenized test card.
+- `POST /v1/passenger/rides/{id}/authorize-test` creates one manual-capture test PaymentIntent for the immutable completed fare and booked test card. Fixed Stripe idempotency key protects retries.
+- `GET /v1/admin/finance/summary` and `/zones`: Owner and Finance read access only.
+- `POST /v1/admin/finance/rides/{id}/capture`, `/refund` with `{requestKey,amountCents}`, `/reconcile`: Owner only.
+- `GET /v1/admin/finance/rides/{id}/reconcile`: Owner and Finance read access.
+- `POST /v1/admin/finance/zones` creates a disabled capped zone; `/zones/{id}/toggle` enables/disables it. Owner only.
+- Bonus awards record once at completion for an eligible trip pickup within the circle and time window; budget reservation is atomic and does not modify the accepted passenger fare.
+
+Test authorization occurs only after ride completion in this candidate; real booking authorization, webhook handling and payouts remain future work.

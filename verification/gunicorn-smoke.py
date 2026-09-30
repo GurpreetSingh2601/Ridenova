@@ -41,9 +41,9 @@ def main():
             process.terminate(); process.wait(10); raise RuntimeError('Gunicorn startup timed out')
         process = start()
         try:
-            assert json.loads(call('/health')[2])['build'] == 41
+            assert json.loads(call('/health')[2])['build'] == 42
             status, headers, body = call('/admin')
-            assert status == 200 and b'BUILD 41' in body and 'Content-Security-Policy' in headers
+            assert status == 200 and b'BUILD 42' in body and 'Content-Security-Policy' in headers
             otp = json.loads(call('/v1/auth/request-otp', {'phone': '6045550123'})[2])
             account = json.loads(call('/v1/auth/verify-otp', {'challengeId': otp['challengeId'], 'code': otp['developmentCode']})[2])
             token = account['accessToken']

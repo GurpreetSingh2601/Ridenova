@@ -42,6 +42,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import android.content.Intent
+import android.net.Uri
 import com.ridenova.passenger.R
 import com.ridenova.passenger.BuildConfig
 import com.google.android.libraries.places.api.Places
@@ -678,6 +680,7 @@ fun RideNovaApp(
             TripDetailScreen(
                 trip = trip,
                 repository = repository,
+                onAuthorizeTest = { rideId -> accountData.authorizeTestRide(rideId) },
                 onBack = { nav.popBackStack() },
                 onOpenLiveRide = { nav.navigate(Routes.MATCHING) },
                 onRideAgain = { previousTrip ->
@@ -721,11 +724,41 @@ fun RideNovaApp(
             }
         }
         composable(Routes.PAYMENT) {
+            val context = LocalContext.current
+            val checkoutPrefs = remember { context.getSharedPreferences("ridenova_test_checkout", android.content.Context.MODE_PRIVATE) }
+            var pendingCheckout by remember { mutableStateOf(checkoutPrefs.getString("sessionId", null)) }
             PaymentMethodsScreen(
                 methods = paymentMethods,
                 busy = accountDataBusy,
                 errorMessage = accountDataError,
                 backendMode = services.environment.backendConfigured,
+                staging = BuildConfig.RIDENOVA_ENVIRONMENT == "staging",
+                pendingTestSetup = pendingCheckout != null,
+                onStartTestSetup = {
+                    accountDataBusy = true; accountDataError = null
+                    appScope.launch {
+                        runCatching { accountData.startStripeTestSetup() }
+                            .onSuccess { session ->
+                                pendingCheckout = session.sessionId
+                                checkoutPrefs.edit().putString("sessionId", session.sessionId).apply()
+                                accountDataBusy = false
+                                runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(session.url))) }
+                                    .onFailure { accountDataError = "Open test checkout failed: " + it.localizedMessage }
+                            }.onFailure { accountDataError = it.localizedMessage; accountDataBusy = false }
+                    }
+                },
+                onVerifyTestSetup = {
+                    val sid = pendingCheckout
+                    if (sid != null) {
+                        accountDataBusy = true; accountDataError = null
+                        appScope.launch {
+                            runCatching { accountData.syncStripeTestSetup(sid) }
+                                .onSuccess { paymentMethods = it; pendingCheckout = null; checkoutPrefs.edit().remove("sessionId").apply() }
+                                .onFailure { accountDataError = it.localizedMessage }
+                            accountDataBusy = false
+                        }
+                    }
+                },
                 onBack = { nav.popBackStack() },
                 onReturnToBooking = {
                     if (nav.previousBackStackEntry?.destination?.route == Routes.CONFIRM) nav.popBackStack()
@@ -2625,6 +2658,7 @@ private fun EmptyTripCard(title: String, subtitle: String) {
 private fun TripDetailScreen(
     trip: RideTrip?,
     repository: RideNovaRepository,
+    onAuthorizeTest: suspend (String) -> String,
     onBack: () -> Unit,
     onOpenLiveRide: () -> Unit,
     onRideAgain: (RideTrip) -> Unit
@@ -2785,6 +2819,21 @@ private fun TripDetailScreen(
 
                 if (trip.status == TripStatus.COMPLETED) {
                     PassengerExperienceCard(trip.id, repository)
+                    if (BuildConfig.RIDENOVA_ENVIRONMENT == "staging") {
+                        var paymentFeedback by remember(trip.id) { mutableStateOf<String?>(null) }
+                        var paymentBusy by remember(trip.id) { mutableStateOf(false) }
+                        val scope = rememberCoroutineScope()
+                        Button(onClick = {
+                            paymentBusy = true
+                            scope.launch {
+                                paymentFeedback = runCatching { "Stripe test authorization: " + onAuthorizeTest(trip.id) }
+                                    .getOrElse { it.localizedMessage ?: "Test authorization failed" }
+                                paymentBusy = false
+                            }
+                        }, enabled = !paymentBusy) { Text("Authorize test payment") }
+                        paymentFeedback?.let { Text(it, fontSize = 12.sp) }
+                        Text("Test mode only. Ask an Owner to capture or refund it in Finance. No real money moves.", fontSize = 11.sp)
+                    }
                 }
 
                 if (isLive) {
@@ -3044,6 +3093,10 @@ private fun PaymentMethodsScreen(
     busy: Boolean,
     errorMessage: String?,
     backendMode: Boolean,
+    staging: Boolean,
+    pendingTestSetup: Boolean,
+    onStartTestSetup: () -> Unit,
+    onVerifyTestSetup: () -> Unit,
     onBack: () -> Unit,
     onReturnToBooking: () -> Unit,
     fromBooking: Boolean,
@@ -3092,7 +3145,7 @@ private fun PaymentMethodsScreen(
     ) { pad ->
         Column(Modifier.padding(pad).fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp)) {
             Text("Choose how you’ll pay", fontSize = 25.sp, fontWeight = FontWeight.Bold)
-            Text("Tap a card to select it for your rides. Cards stay in the order you added them; only the highlight moves. No real card is charged.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(if (staging) "Use a Stripe test card for test payments. Existing development references cannot be charged. No real money moves." else "Tap a card to select it for your rides. No real card is charged.", color = MaterialTheme.colorScheme.onSurfaceVariant)
             errorMessage?.let { Spacer(Modifier.height(10.dp)); Text(it, color = MaterialTheme.colorScheme.error, fontSize = 12.sp) }
             if (busy) { Spacer(Modifier.height(12.dp)); LinearProgressIndicator(Modifier.fillMaxWidth()) }
             Spacer(Modifier.height(16.dp))
@@ -3117,7 +3170,7 @@ private fun PaymentMethodsScreen(
                         Spacer(Modifier.width(12.dp))
                         Column(Modifier.weight(1f)) {
                             Text(method.displayLabel, fontWeight = FontWeight.SemiBold)
-                            Text("Expires ${method.expiryMonth.toString().padStart(2, '0')}/${method.expiryYear} · Development only", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 11.sp)
+                            Text("Expires ${method.expiryMonth.toString().padStart(2, '0')}/${method.expiryYear} · ${if (method.developmentOnly) "Display reference" else "Stripe test card"}", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 11.sp)
                             if (method.isDefault) Text("Selected for rides", color = MaterialTheme.colorScheme.primary, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
                         }
                         if (method.isDefault) Icon(Icons.Default.CheckCircle, "Selected for rides", tint = MaterialTheme.colorScheme.primary)
@@ -3135,14 +3188,17 @@ private fun PaymentMethodsScreen(
                 ) { Text("Continue to booking") }
                 Spacer(Modifier.height(12.dp))
             }
-            Button(onClick = { showAdd = true }, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp), enabled = backendMode && !busy && methods.size < 5, shape = RoundedCornerShape(16.dp)) {
+            if (staging) {
+                Button(onClick = onStartTestSetup, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp), enabled = !busy && methods.size < 5) { Text("Add Stripe test card") }
+                if (pendingTestSetup) TextButton(onClick = onVerifyTestSetup, enabled = !busy) { Text("Verify test card after checkout") }
+            } else Button(onClick = { showAdd = true }, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp), enabled = backendMode && !busy && methods.size < 5, shape = RoundedCornerShape(16.dp)) {
                 Icon(Icons.Default.AddCard, null); Spacer(Modifier.width(8.dp)); Text("Add development card")
             }
             Spacer(Modifier.height(12.dp))
             Surface(shape = RoundedCornerShape(16.dp), color = NovaBlue.copy(alpha = .10f)) {
                 Row(Modifier.fillMaxWidth().padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.Security, null, tint = NovaBlue); Spacer(Modifier.width(10.dp))
-                    Text("Production payments will use provider tokens. RideNova’s backend must never receive raw card numbers or CVV values.", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("Stripe test checkout collects test card details. RideNova stores only provider references and display details; no raw card numbers or CVV.", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         }

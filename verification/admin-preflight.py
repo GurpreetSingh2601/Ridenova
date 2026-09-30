@@ -1,4 +1,4 @@
-"""Dependency-free Build 41 Admin HTML structure and JavaScript syntax preflight."""
+"""Dependency-free Build 42 Admin HTML structure and JavaScript syntax preflight."""
 from html.parser import HTMLParser
 from pathlib import Path
 import re
@@ -53,18 +53,18 @@ def main():
     duplicates = sorted({item for item in parser.ids if parser.ids.count(item) > 1})
     assert not duplicates, f'Duplicate Admin IDs: {duplicates}'
     for text in ('Dashboard', 'Rides', 'Drivers / Fleet', 'Support', 'Finance',
-                 'Staff & Access', 'Audit Logs', 'BUILD 41', 'ADMIN v0.8.0'):
+                 'Staff & Access', 'Audit Logs', 'BUILD 42', 'ADMIN v0.9.0'):
         assert text in source, f'Missing Admin navigation/release label: {text}'
     assert 'BUILD 35 · ADMIN' not in source.upper()
     assert 'window.loadPagedRides=async function' in source
     assert "const staffWorkspace=document.getElementById('staff-workspace');if(staffWorkspace)" in source
-    assert len(parser.scripts) == 5, f'Expected 5 inline scripts, found {len(parser.scripts)}'
+    assert len(parser.scripts) == 6, f'Expected 5 inline scripts, found {len(parser.scripts)}'
     with tempfile.TemporaryDirectory() as directory:
         for number, script in enumerate(parser.scripts, 1):
             path = Path(directory) / f'admin-script-{number}.js'
             path.write_text(script, encoding='utf-8')
             subprocess.run([node, '--check', str(path)], check=True)
-    print('PASS: Admin HTML IDs/navigation are complete and all 5 shipped inline scripts pass Node syntax checks.')
+    print('PASS: Admin HTML IDs/navigation are complete and all 6 shipped inline scripts pass Node syntax checks.')
 
 
 if __name__ == '__main__':

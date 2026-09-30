@@ -34,8 +34,8 @@ android {
         applicationId = "com.ridenova.driver"
         minSdk = 26
         targetSdk = 37
-        versionCode = 39
-        versionName = "0.18.0-build41"
+        versionCode = 40
+        versionName = "0.19.0-build42"
 
         // Supports MAPS_API_KEY in either gradle.properties or local.properties.
         manifestPlaceholders["MAPS_API_KEY"] = mapsApiKey

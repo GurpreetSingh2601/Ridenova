@@ -1,5 +1,13 @@
 # RideNova change log
 
+## Build 42 sandbox staging candidate — 2026-09-28
+
+- Add Stripe test-only hosted card setup, explicit completed-trip authorization, Owner capture/refund and reconciliation using stable provider idempotency keys.
+- Add additive finance, sandbox and boost tables, role-gated Admin Finance controls and capped platform-funded bonus awards.
+- Batch API rate-limit database checks and log handler, lock and rate-check timings for investigating the reported staging slowness.
+- Preserve existing data and simulated cards; update both Android version labels and the Passenger payment flow.
+- Status: candidate pending disposable PostgreSQL CI, Android compilation, real Stripe test provider, Render staging and phone verification.
+
 ## Build 41 staging candidate — 2026-09-25
 
 - Preserve accepted Build 40.1 functionality; add shared PostgreSQL compatibility,

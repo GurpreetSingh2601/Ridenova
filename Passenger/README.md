@@ -1,4 +1,4 @@
-# RideNova Passenger 0.33.0 — Build 41
+# RideNova Passenger 0.34.0 — Build 42
 
 This Android app uses the one shared RideNova backend in `backend/` for authentication, account data, quotes, booking, ride recovery, live status, history, ratings and support.
 
@@ -6,3 +6,5 @@ Build 41 binds the selected Google road route to the server quote and booking, u
 
 Setup and database instructions are in the repository-root `START_HERE_BUILD_41.md`. This remains a development build: no real SMS, card charge, payout or production hosting is connected.
 
+
+Build 42 adds hosted Stripe test card setup and a completed-trip test authorization action. Production payment remains disabled.

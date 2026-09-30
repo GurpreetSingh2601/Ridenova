@@ -13,6 +13,26 @@ data class AccountPlaces(
 
 /** Server-owned passenger preferences and development payment references. */
 class AccountDataRepository(private val client: RideNovaHttpClient) {
+    data class TestCheckout(val sessionId: String, val url: String)
+
+    suspend fun startStripeTestSetup(): TestCheckout = when (val result = client.post("v1/passenger/payment-methods/setup", JSONObject())) {
+        is ApiResult.Success -> TestCheckout(result.value.getString("sessionId"), result.value.getString("url"))
+        is ApiResult.Failure -> error(result.message)
+    }
+
+    suspend fun syncStripeTestSetup(sessionId: String): List<PaymentMethod> {
+        when (val result = client.post("v1/passenger/payment-methods/sync", JSONObject().put("sessionId", sessionId))) {
+            is ApiResult.Success -> Unit
+            is ApiResult.Failure -> error(result.message)
+        }
+        return loadPaymentMethods()
+    }
+
+    suspend fun authorizeTestRide(rideId: String): String = when (val result = client.post(
+        "v1/passenger/rides/$rideId/authorize-test", JSONObject())) {
+        is ApiResult.Success -> result.value.optString("status", "unknown")
+        is ApiResult.Failure -> error(result.message)
+    }
     suspend fun loadPlaces(): AccountPlaces = when (val result = client.get("v1/passenger/account-data")) {
         is ApiResult.Success -> places(result.value)
         is ApiResult.Failure -> error(result.message)
