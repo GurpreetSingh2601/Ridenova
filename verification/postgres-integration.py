@@ -159,6 +159,9 @@ class PostgresMigrationTests(unittest.TestCase):
         restarted.settings = service.settings
         with restarted.connect() as db:
             restarted.finance.completed(db, ride)
+        summary = restarted.finance.summary()
+        self.assertIsInstance(summary['provisionalDriverBalances'][0]['grossBeforeCostsCents'], int)
+        json.dumps(summary, allow_nan=False)
         self.assertEqual(restarted.finance.authorize('owner42',ride['id'])['status'],'requires_capture')
         self.assertEqual(restarted.finance.capture(ride['id'])['status'],'succeeded')
         restarted.finance.refund(ride['id'],'ci_refund',200)

@@ -260,7 +260,9 @@ class Finance:
                 'entries':[dict(zip(('key','rideId','driverId','kind','amountCents','atMs'),e)) for e in entries],
                 'payments':[dict(zip(('rideId','amountCents','status'),p)) for p in payments],
                 'refunds':[dict(zip(('rideId','requestKey','amountCents','status'),r)) for r in refunds],
-                'provisionalDriverBalances':[{'driverId':d,'grossBeforeCostsCents':amount,'payoutEligible':False} for d,amount in balances],
+                # PostgreSQL SUM(BIGINT) returns NUMERIC (Decimal), which JSON cannot encode.
+                # Cents are integral throughout the ledger; normalize at the API boundary.
+                'provisionalDriverBalances':[{'driverId':d,'grossBeforeCostsCents':int(amount),'payoutEligible':False} for d,amount in balances],
                 'payoutsEnabled':False}
 
     def reconcile(self, ride_id, settle=False):

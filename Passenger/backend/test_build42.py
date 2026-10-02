@@ -3,6 +3,7 @@ import io
 import tempfile
 import threading
 import unittest
+from decimal import Decimal
 from pathlib import Path
 from unittest.mock import patch
 from server import Service
@@ -89,6 +90,20 @@ class Finance42Tests(unittest.TestCase):
         self.assertEqual(sum(e['amountCents'] for e in finance.summary()['entries'] if e['kind']=='PLATFORM_FUNDED_BOOST'),200)
         self.assertEqual(finance.summary()['provisionalDriverBalances'],
                          [{'driverId':'drv42','grossBeforeCostsCents':8270,'payoutEligible':False}])
+
+    def test_finance_summary_serializes_postgres_decimal_balance(self):
+        class Cursor:
+            def __init__(self, rows): self.rows=rows
+            def fetchall(self): return self.rows
+        class Connection:
+            def __enter__(self): return self
+            def __exit__(self, *_): pass
+            def execute(self, query):
+                return Cursor([('drv42', Decimal('4235'))] if 'GROUP BY driver_id' in query else [])
+        with patch.object(self.service, 'connect', return_value=Connection()):
+            summary=self.service.finance.summary()
+        self.assertEqual(summary['provisionalDriverBalances'][0]['grossBeforeCostsCents'],4235)
+        json.dumps(summary,allow_nan=False)
 
     def test_live_secret_fails_closed(self):
         with self.assertRaises(ValueError): StripeTest('sk_live_unsafe')
