@@ -1159,7 +1159,7 @@ def make_handler(service):
             fail(403,'FORBIDDEN','Development admin authorization required')
         return staff.authorize(header,permission)
     class Handler(BaseHTTPRequestHandler):
-        server_version = 'RideNova/42.0'
+        server_version = 'RideNova/42.1'
 
         def log_message(self, *_):
             pass  # Do not print addresses, tokens, URLs or request bodies.
@@ -1226,7 +1226,7 @@ def make_handler(service):
                     if not isinstance(body, dict):
                         fail(400, 'INVALID_JSON', 'Expected JSON object')
                 if path == '/health' and self.command == 'GET':
-                    result = {'status': 'ok', 'version': '42.0', 'build': 42, 'developmentOnly': True,
+                    result = {'status': 'ok', 'version': '42.1', 'build': 42, 'releaseRevision': '42.1', 'developmentOnly': True,
                               'authentication': 'development-otp'}
                 elif path == '/v1/staff/login' and self.command == 'POST':
                     result = staff.login(body)
@@ -1605,7 +1605,7 @@ if __name__ == '__main__':
             stop.wait(5)
     worker = threading.Thread(target=scheduler, daemon=True)
     worker.start()
-    print(f'RideNova Build 42 / Admin v0.9.0 DEVELOPMENT ONLY on http://{args.host}:{args.port}; Trip Radar enabled; no real charges')
+    print(f'RideNova Build 42.1 / Admin v0.9.1 DEVELOPMENT ONLY on http://{args.host}:{args.port}; Trip Radar enabled; no real charges')
     server = ThreadingHTTPServer((args.host, args.port), make_handler(service))
     try:
         server.serve_forever()

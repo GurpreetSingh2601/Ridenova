@@ -1,5 +1,14 @@
 # RideNova change log
 
+## Build 42.1 UI and UX — 2026-10-03 UTC
+
+- Refine both Android design systems, actual in-app logos, auth/keyboard behavior, booking/payment clarity and accessible action states.
+- Add idle Driver bottom navigation, adaptive offers with fixed actions, earnings-to-details navigation, trip search and document progress. Correct trip-detail back/drawer state.
+- Refine all Admin workspaces and mobile navigation; add per-workspace freshness, coalesced refresh, useful failure/empty states, session expiry cleanup and stale-response protection.
+- Preserve one shared backend, corrected finance serialization, database/migrations, accounts, dispatch and payment semantics. No schema change or hosted deployment.
+- Verified: 153 portable backend tests, 12 PostgreSQL tests, Gunicorn smoke, Admin browser checks and both Android debug/staging compilations. Phone/hosted acceptance remains.
+- See RELEASE_NOTES_BUILD_42_1.md and TEST_RESULTS_BUILD_42_1.md.
+
 ## Build 42 sandbox staging candidate — 2026-09-28
 
 - Add Stripe test-only hosted card setup, explicit completed-trip authorization, Owner capture/refund and reconciliation using stable provider idempotency keys.

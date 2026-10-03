@@ -1,6 +1,6 @@
-Build 42 staging candidate
-Files: 285
-Longest archive path: 89 characters
+Build 42.1 UI/UX staging source
+Files: 311
+Longest archive path: 90 characters
 One shared backend; both Android sources; Admin; migrations; deployment workflows included.
 Caches, local credentials, databases and signing keys excluded.
 SHA256 inventory and ZIP CRC validated by package-build42.py.

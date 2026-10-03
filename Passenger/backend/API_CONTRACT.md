@@ -1,11 +1,11 @@
-# RideNova Build 42 API — local and controlled staging contract
+# RideNova Build 42.1 API — local and controlled staging contract
 
 Passenger Android, Driver Android and Admin use this single shared Python API.
 SQLite is retained for development; staging uses PostgreSQL and the WSGI transport.
-Build 42 reports `version: 42.0` and `build: 42` from
+Build 42.1 reports `version: 42.1`, `build: 42` and `releaseRevision: 42.1` from
 `GET /health`.
 
-Staging `/health` includes environment and deployed revision. `/ready` returns
+Staging `/health` includes environment and the deployed Git commit as `revision`; this field is distinct from `releaseRevision`. No endpoints or database schema were changed by the UI update. `/ready` returns
 200 only when migration checksums, active Owner, fresh scheduler and matching
 revision checks pass; otherwise it returns 503 without database details.
 

@@ -1,3 +1,5 @@
+> Historical Build 42 record. For this release, read the root START_HERE_BUILD_42_1.md and TEST_RESULTS_BUILD_42_1.md.
+
 # Build 42 acceptance checklist
 
 - [ ] CI shared API, PostgreSQL integration and both Android jobs pass on the exact Git revision.

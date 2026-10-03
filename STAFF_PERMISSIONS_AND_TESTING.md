@@ -1,4 +1,4 @@
-# Build 42 staff permissions and testing
+# Build 42.1 staff permissions and testing
 
 The backend is authoritative. The Admin portal exposes workspaces appropriate to the signed-in role, and every request is independently authorized server-side.
 
@@ -74,7 +74,7 @@ staff table and never grants a default Owner. Imported Owner accounts are preser
 6. Perform staff/Admin actions and confirm Audit Logs records them.
 7. Sign out and confirm the old token is rejected.
 
-Automated coverage includes bootstrap, creation, RBAC, finance redaction, session revocation, last-owner protection, pagination and audit. Browser rendering still requires manual acceptance.
+Automated coverage includes bootstrap, creation, RBAC, finance redaction, session revocation, last-owner protection, pagination and audit. The Build 42.1 Chromium fixture checks cover Owner and four restricted roles across desktop/mobile, including logout/expiry clearing. Hosted account and mutation acceptance is still required.
 
 ## Build 42 sandbox finance additions (implemented, source verified)
 
@@ -85,3 +85,9 @@ Automated coverage includes bootstrap, creation, RBAC, finance redaction, sessio
 | Passenger test card setup/sync and completed-ride authorize | Passenger account only | No | No |
 
 Owner and Finance should repeat the read/write-denial checks after deployment. Staff creation and access remain backend-enforced; finance actions write staff audit events. A displayed boost award or ledger entry is not a bank settlement or payout.
+
+## Build 42.1 interaction changes
+
+Each authorized workspace has a Refresh action and last-updated status. A failed refresh keeps earlier records visibly marked as potentially stale. Duplicate refreshes coalesce; hidden workspaces are not all refreshed in the background. Returning to a visible workspace after 30 seconds refreshes its data. A 401 clears the session and loaded records; late responses from the prior session are rejected.
+
+This pass does not create Passenger/Driver public signup or new staff roles. Owner bootstrap remains a controlled administrative procedure; your existing Owner is retained.

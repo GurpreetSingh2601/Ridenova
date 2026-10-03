@@ -1,17 +1,13 @@
-RIDENOVA BUILD 42 — CONSOLIDATED SANDBOX STAGING CANDIDATE
-=========================================================
+RIDENOVA BUILD 42.1 — COMPLETE UI / UX SOURCE UPDATE
 
-1. Extract RN42 directly under G:\RideNova or C:\RideNova.
-2. Read START_HERE_BUILD_42.md before deploying or rebuilding apps.
-3. Open Passenger and Driver as separate Android Studio projects.
-4. Preserve your current database; validate a COPY with MIGRATE_SQLITE_COPY.py.
+Extract RN421 directly under G:\RideNova or C:\RideNova.
+Read START_HERE_BUILD_42_1.md. Keep existing private configuration and database.
 
-Passenger: 0.34.0-build42
-Driver:    0.19.0-build42
-Backend:  42.0
-Admin:    0.9.0
+Passenger: 0.34.1-build42.1 (45)
+Driver:    0.19.1-build42.1 (41)
+API:       42.1
+Admin:     0.9.1
 
-No cloud deployment or charges have been initiated. See test results and gates.
-
-Do not nest the project inside multiple long folder names. This short package
-layout avoids Windows error 0x80010135 (Path too long).
+One shared backend. No new schema migration. No default credentials.
+Source ZIP only; build with your existing Render URL and Maps key.
+Actual checks and device limitations: TEST_RESULTS_BUILD_42_1.md.

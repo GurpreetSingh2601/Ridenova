@@ -1,3 +1,5 @@
+> Historical Build 42 record. For this release, read the root START_HERE_BUILD_42_1.md and TEST_RESULTS_BUILD_42_1.md.
+
 # RideNova Build 42 — sandbox and boost staging candidate
 
 This archive contains Passenger Android, Driver Android, Admin and **one shared backend**. It includes the Build 41 staging payment query fix. This is a test-only candidate, not an approved public launch.

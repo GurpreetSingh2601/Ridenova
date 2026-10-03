@@ -35,6 +35,24 @@ jobs:
           sudo apt-get install -y postgresql-client-16
           createdb -h localhost -U postgres ridenova_restore_test
           python verification/postgres-integration.py
+  admin-ui:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - working-directory: verification
+        run: npm ci
+      - working-directory: verification
+        run: npx playwright install --with-deps chromium
+      - working-directory: verification
+        run: npm run test:browser
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: admin-ui-evidence
+          path: verification/ui-evidence
   android:
     runs-on: ubuntu-latest
     strategy:

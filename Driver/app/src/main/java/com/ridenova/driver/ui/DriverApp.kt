@@ -36,6 +36,8 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.semantics.*
+import androidx.compose.foundation.horizontalScroll
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -99,14 +101,14 @@ fun RideNovaDriverApp(locationGranted: Boolean, viewModel: DriverViewModel = vie
     }
     BackHandler(inAppNavigation) { inAppNavigation = false }
     BackHandler(selectedTrip != null) { selectedTrip = null }
-    BackHandler(!inAppNavigation && !requestVisible && selectedTab != DriverTab.HOME && !documents && !access) { selectedTab = DriverTab.HOME }
+    BackHandler(!inAppNavigation && !requestVisible && selectedTab != DriverTab.HOME && selectedTrip == null && !documents && !access) { selectedTab = DriverTab.HOME }
     // Build 32: the map owns horizontal gestures. The drawer is menu-button only so a
     // left/right map pan can never be interpreted as opening the navigation panel.
     ModalNavigationDrawer(drawerState = drawer, gesturesEnabled = false,
         drawerContent = {
             ModalDrawerSheet {
                 Column(Modifier.fillMaxHeight().verticalScroll(rememberScrollState())) {
-                    Text("RideNova Driver", Modifier.padding(start = 24.dp, top = 28.dp), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                    Row(Modifier.padding(start=24.dp,top=28.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(12.dp)) { NovaBrand(44);Column { Text("RideNova",style=MaterialTheme.typography.titleLarge);Text("DRIVER",style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.primary) } }
                     Text(state.profile.name, Modifier.padding(start = 24.dp, top = 6.dp, bottom = 24.dp), color = MaterialTheme.colorScheme.onSurfaceVariant)
                     DriverTab.entries.forEach { tab ->
                         NavigationDrawerItem(selected = selectedTab == tab,
@@ -119,10 +121,10 @@ fun RideNovaDriverApp(locationGranted: Boolean, viewModel: DriverViewModel = vie
                                 DriverTab.ALERTS -> Icons.Default.Notifications
                             }, null) },
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
-                            onClick = { selectedTab = tab; documents = false; access = false; scope.launch { drawer.close() } })
+                            onClick = { selectedTab = tab; selectedTrip = null; documents = false; access = false; scope.launch { drawer.close() } })
                     }
                     HorizontalDivider(Modifier.padding(20.dp))
-                    Text("Build 42 · ${BuildConfig.RIDENOVA_ENVIRONMENT}", Modifier.padding(24.dp), style = MaterialTheme.typography.bodySmall)
+                    Text("Build 42.1 · ${BuildConfig.RIDENOVA_ENVIRONMENT}", Modifier.padding(24.dp), style = MaterialTheme.typography.bodySmall)
                 }
             }
         }) {
@@ -131,6 +133,16 @@ fun RideNovaDriverApp(locationGranted: Boolean, viewModel: DriverViewModel = vie
                 Row(Modifier.fillMaxWidth().statusBarsPadding().heightIn(min = 56.dp).padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                     IconButton(onClick = { scope.launch { drawer.open() } }) { Icon(Icons.Default.Menu, "Open driver menu") }
                     Text(if (selectedTab == DriverTab.HOME) "Your trip" else selectedTab.label, style = MaterialTheme.typography.titleLarge)
+                }
+            }
+        },bottomBar={
+            if(!requestVisible && !inAppNavigation && !documents && !access && selectedTrip==null && state.rideStage in setOf(RideStage.IDLE,RideStage.COMPLETED)) {
+                NavigationBar(containerColor=MaterialTheme.colorScheme.surface,tonalElevation=0.dp) {
+                    listOf(DriverTab.HOME,DriverTab.EARNINGS,DriverTab.HISTORY,DriverTab.ACCOUNT).forEach { tab ->
+                        NavigationBarItem(selected=selectedTab==tab,onClick={selectedTab=tab},label={Text(tab.label)},icon={
+                            Icon(when(tab) { DriverTab.HOME->Icons.Default.Home;DriverTab.EARNINGS->Icons.Default.Payments;DriverTab.HISTORY->Icons.Default.ReceiptLong;else->Icons.Default.Person },null)
+                        })
+                    }
                 }
             }
         }) { padding ->
@@ -145,7 +157,7 @@ fun RideNovaDriverApp(locationGranted: Boolean, viewModel: DriverViewModel = vie
                     DriverTab.HOME -> DriverHomeScreen(state, viewModel, onInAppNavigate = { inAppNavigation = true },
                         onMenu = { scope.launch { drawer.open() } }, onEarnings = { selectedTab = DriverTab.EARNINGS },
                         onAlerts = { selectedTab = DriverTab.ALERTS })
-                    DriverTab.EARNINGS -> EarningsScreen(state, trips)
+                    DriverTab.EARNINGS -> EarningsScreen(state,trips) { selectedTrip=it;selectedTab=DriverTab.HISTORY }
                     DriverTab.HISTORY -> selectedTrip?.let { DriverTripDetailScreen(it) { selectedTrip = null } }
                         ?: TripHistoryScreen(trips, { selectedTab = DriverTab.HOME }, { selectedTrip = it })
                     DriverTab.ALERTS -> DriverAlertSettings()
@@ -236,13 +248,7 @@ private fun DriverMapLayout(state: DriverUiState, content: @Composable () -> Uni
 
 @Composable
 private fun DriverNotice(title: String, message: String, error: Boolean = false) {
-    Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp),
-        color = if (error) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.surfaceVariant) {
-        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(title, fontWeight = FontWeight.SemiBold)
-            Text(message, style = MaterialTheme.typography.bodySmall)
-        }
-    }
+    NovaNotice(title,message,error)
 }
 
 @Composable
@@ -378,32 +384,36 @@ private fun DedicatedRequestScreen(
         while (true) { now = System.currentTimeMillis(); delay(250) }
     }
     val active = ride.expiresAtEpochMs <= 0 || now < ride.expiresAtEpochMs
-    Column(Modifier.fillMaxSize()) {
-        Box(Modifier.weight(1f)) {
-            DriverMapLayout(state) {
-                Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-                    state.connectionError?.let { DriverNotice("Could not update request", it, true) }
-                    RideRequestCard(ride, state.remoteMode, state.busy, onAccept, onDecline, showActions = false)
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+        val landscape=maxWidth>maxHeight && maxWidth>=600.dp
+        val sheetLimit=if(landscape) maxHeight else maxHeight*.73f
+        val details: @Composable () -> Unit = {
+            Surface(shape=RoundedCornerShape(topStart=24.dp,topEnd=24.dp)) {
+                Column(Modifier.fillMaxWidth().heightIn(max=sheetLimit)) {
+                    Column(Modifier.weight(1f,fill=false).verticalScroll(rememberScrollState())) {
+                        state.connectionError?.let { DriverNotice("Could not update request",it,true) }
+                        RideRequestCard(ride,state.remoteMode,state.busy,onAccept,onDecline,showActions=false)
+                    }
+                    HorizontalDivider(color=MaterialTheme.colorScheme.outlineVariant)
+                    Row(Modifier.fillMaxWidth().padding(16.dp),horizontalArrangement=Arrangement.spacedBy(12.dp)) {
+                        OutlinedButton(onClick=onDecline,enabled=!state.busy && active,modifier=Modifier.weight(1f).heightIn(min=56.dp)) { Text("Decline") }
+                        Button(onClick=onAccept,enabled=!state.busy && active,modifier=Modifier.weight(1.5f).heightIn(min=56.dp)) {
+                            if(state.busy) { CircularProgressIndicator(Modifier.size(18.dp),strokeWidth=2.dp,color=MaterialTheme.colorScheme.onPrimary);Spacer(Modifier.width(8.dp)) }
+                            Text(if(!active) "Expired" else if(state.busy) "Updating…" else if(ride.offerMode=="RADAR") "Match ride" else "Accept ride")
+                        }
+                    }
                 }
             }
         }
-        Surface(shadowElevation = 8.dp) {
-            Column {
-            if (ride.expiresAtEpochMs > 0) Text(
-                if (active) "${((ride.expiresAtEpochMs - now + 999) / 1000).coerceAtLeast(0)} seconds to respond" else "Request expired",
-                Modifier.padding(start = 18.dp, top = 8.dp), style = MaterialTheme.typography.labelLarge)
-            Row(Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                OutlinedButton(onClick = onDecline, enabled = !state.busy && active,
-                    modifier = Modifier.weight(1f).heightIn(min = 56.dp)) { Text("Decline") }
-                Button(onClick = onAccept, enabled = !state.busy && active,
-                    modifier = Modifier.weight(1.5f).heightIn(min = 56.dp)) {
-                    Text(if (!active) "Expired" else if (state.busy) "Updating…" else if (ride.offerMode == "RADAR") "Match ride" else "Accept ride")
-                }
-            }
+        if(landscape) Row(Modifier.fillMaxSize()) {
+            Box(Modifier.weight(1f).fillMaxHeight()) { DriverMap(state) }
+            Box(Modifier.weight(1f).fillMaxHeight(),contentAlignment=Alignment.BottomCenter) { details() }
+        } else Column(Modifier.fillMaxSize()) {
+            Box(Modifier.fillMaxWidth().weight(1f)) { DriverMap(state) };details()
         }
-    }
     }
 }
+
 
 @Composable
 private fun RideRequestCard(
@@ -429,8 +439,8 @@ private fun RideRequestCard(
     val combinedKm = ride.pickupDistanceKm + ride.tripDistanceKm
     val grossPerHour = if (totalMinutes > 0) ride.driverEstimatedEarningsCad * 60.0 / totalMinutes else 0.0
     Surface(modifier = modifier.fillMaxWidth(), shape = RoundedCornerShape(24.dp),
-        color = MaterialTheme.colorScheme.surface, shadowElevation = 3.dp) {
-        Column(Modifier.padding(horizontal = 16.dp, vertical = 13.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
+        color = MaterialTheme.colorScheme.surface, shadowElevation = 0.dp) {
+        Column(Modifier.padding(horizontal=20.dp,vertical=16.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
             if (ride.offerMode == "RADAR") {
                 Surface(shape = RoundedCornerShape(12.dp), color = MaterialTheme.colorScheme.primaryContainer) {
                     Row(Modifier.fillMaxWidth().padding(horizontal = 11.dp, vertical = 7.dp),
@@ -444,11 +454,11 @@ private fun RideRequestCard(
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
-                    Text("NEW RIDE · ESTIMATED EARNINGS", color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    Text("ESTIMATED EARNINGS", color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.labelLarge)
                     Text(money(ride.driverEstimatedEarningsCad),
                         style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
-                    Text("Gross before costs · development", style = MaterialTheme.typography.labelSmall,
+                    Text("Test trip · gross before costs", style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 Column(horizontalAlignment = Alignment.End) {
@@ -464,7 +474,7 @@ private fun RideRequestCard(
                         color = if (offerActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
                         fontWeight = FontWeight.Bold)
                     Spacer(Modifier.weight(1f))
-                    Text("20-second offer", color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    Text(if(ride.offerMode=="RADAR") "First available match" else "Exclusive offer", color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.labelSmall)
                 }
                 LinearProgressIndicator(progress = { (secondsLeft.toFloat() / 20f).coerceIn(0f, 1f) },
@@ -532,7 +542,7 @@ private fun ActiveRideCard(
     Column(modifier.fillMaxSize().imePadding()) {
         Column(Modifier.weight(1f, fill = true).verticalScroll(rememberScrollState()).padding(18.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            Text(title,style=MaterialTheme.typography.titleLarge,fontWeight=FontWeight.Bold,modifier=Modifier.semantics { liveRegion=LiveRegionMode.Polite })
             Text(destinationText, style = MaterialTheme.typography.bodyLarge)
             state.connectionError?.let { DriverNotice("Trip update failed", it, true) }
             if (state.resumedRide) DriverNotice("Trip restored", "Continue with your current trip.")
@@ -610,12 +620,12 @@ private fun CompletedRideCard(ride: RideRequest, remoteMode: Boolean, onDone: ()
     Surface(modifier = modifier.fillMaxWidth().padding(12.dp), shape = RoundedCornerShape(28.dp), shadowElevation = 12.dp) {
         Column(Modifier.padding(22.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Icon(Icons.Default.CheckCircle, null, Modifier.size(52.dp), tint = Color(0xFF209454))
-            Text(if (remoteMode) "Local test trip completed" else "Demo trip completed", fontWeight = FontWeight.Bold, fontSize = 22.sp)
+            Text(if(remoteMode) "Trip complete" else "Demo trip complete", fontWeight = FontWeight.Bold, fontSize = 22.sp)
             Text("Estimated driver earnings")
             Text(money(ride.driverEstimatedEarningsCad), fontSize = 34.sp, fontWeight = FontWeight.Bold)
             Text("Trip fare ${money(ride.fareCad)} · no real payout")
             if (remoteMode) DriverExperienceActions(ride.id)
-            Button(onClick = onDone, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)) { Text("Done") }
+            Button(onClick=onDone,modifier=Modifier.fillMaxWidth().heightIn(min=52.dp)) { Text("Back to driver home") }
         }
     }
 }
@@ -633,7 +643,7 @@ private fun RouteLine(icon: androidx.compose.ui.graphics.vector.ImageVector, tex
 }
 
 @Composable
-private fun EarningsScreen(state: DriverUiState, trips: List<CompletedTrip>) {
+private fun EarningsScreen(state: DriverUiState,trips: List<CompletedTrip>,onTrip: (CompletedTrip)->Unit) {
     // Purely a display filter: no fabricated payouts, and no extra backend polling.
     var period by rememberSaveable { mutableStateOf("Today") }
     val today = java.time.LocalDate.now()
@@ -655,15 +665,14 @@ private fun EarningsScreen(state: DriverUiState, trips: List<CompletedTrip>) {
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Spacer(Modifier.height(12.dp))
-        Text("Earnings", fontSize = 30.sp, fontWeight = FontWeight.Bold)
-        Text("Development earnings · not a payout balance", color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        NovaSection("Your earnings","Track your trips. Test amounts are not a payout balance.")
+        Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),horizontalArrangement=Arrangement.spacedBy(8.dp)) {
             listOf("Today", "This week", "All time").forEach { option ->
                 FilterChip(selected = period == option, onClick = { period = option },
                     label = { Text(option) })
             }
         }
-        Text(money(estimatedEarnings), fontSize = 42.sp, fontWeight = FontWeight.Bold)
+        Surface(Modifier.fillMaxWidth(),shape=RoundedCornerShape(24.dp),color=MaterialTheme.colorScheme.primaryContainer) { Column(Modifier.padding(24.dp),verticalArrangement=Arrangement.spacedBy(6.dp)) { Text(period.uppercase()+" · ESTIMATED GROSS",style=MaterialTheme.typography.labelMedium);Text(money(estimatedEarnings),style=MaterialTheme.typography.displayMedium);Text("CAD · before costs",style=MaterialTheme.typography.bodySmall) } }
         Surface(shape = RoundedCornerShape(22.dp), tonalElevation = 2.dp) {
             Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
                 EarningsRow("Completed trips", filteredTrips.size.toString())
@@ -682,7 +691,7 @@ private fun EarningsScreen(state: DriverUiState, trips: List<CompletedTrip>) {
         } else {
             Text("Recent trips · $period", fontWeight = FontWeight.Bold, fontSize = 20.sp)
             filteredTrips.sortedByDescending { it.completedAtEpochMs }.take(5).forEach { trip ->
-                Surface(shape = RoundedCornerShape(18.dp), tonalElevation = 1.dp) {
+                Surface(onClick={onTrip(trip)},shape=RoundedCornerShape(18.dp),tonalElevation=1.dp) {
                     Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
                         EarningsRow(trip.completedAt, money(trip.driverEarningsCad))
                         Text("${trip.pickup} → ${trip.destination}", maxLines = 2, overflow = TextOverflow.Ellipsis,
@@ -707,11 +716,15 @@ private fun EarningsRow(label: String, value: String) {
 
 @Composable
 private fun TripHistoryScreen(trips: List<CompletedTrip>, onHome: () -> Unit, onTrip: (CompletedTrip) -> Unit) {
+    var search by rememberSaveable { mutableStateOf("") }
+    val shown=trips.filter { search.isBlank() || "${it.pickup} ${it.destination} ${it.id}".contains(search.trim(),ignoreCase=true) }
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp)) {
         Spacer(Modifier.height(12.dp))
-        Text("Trips", fontSize = 30.sp, fontWeight = FontWeight.Bold)
-        Text("Your completed rides and earnings", color = MaterialTheme.colorScheme.onSurfaceVariant)
+        NovaSection("Trip history","Open a trip for its route, earnings and support.")
         Spacer(Modifier.height(14.dp))
+        OutlinedTextField(search,{search=it},Modifier.fillMaxWidth(),singleLine=true,label={Text("Search trips")},placeholder={Text("Address or trip ID")},leadingIcon={Icon(Icons.Default.Search,null)},trailingIcon={if(search.isNotEmpty()) IconButton(onClick={search=""}) { Icon(Icons.Default.Close,"Clear trip search") }})
+        Spacer(Modifier.height(14.dp))
+        if(shown.isEmpty() && trips.isNotEmpty()) NovaNotice("No matching trips","Try a pickup address, destination or trip ID.")
         if (trips.isEmpty()) {
             Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(24.dp), color = MaterialTheme.colorScheme.surfaceVariant) {
                 Column(Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally,
@@ -724,7 +737,7 @@ private fun TripHistoryScreen(trips: List<CompletedTrip>, onHome: () -> Unit, on
             }
         }
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            trips.sortedByDescending { it.completedAtEpochMs }.forEach { trip ->
+            shown.sortedByDescending { it.completedAtEpochMs }.forEach { trip ->
                 Surface(shape = RoundedCornerShape(20.dp), tonalElevation = 2.dp,
                     modifier = Modifier.fillMaxWidth().clickable { onTrip(trip) }) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
@@ -739,7 +752,6 @@ private fun TripHistoryScreen(trips: List<CompletedTrip>, onHome: () -> Unit, on
                                 style = MaterialTheme.typography.labelLarge)
                             Icon(Icons.Default.ChevronRight, null, Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary)
                         }
-                        DriverExperienceActions(trip.id)
                     }
                 }
             }
@@ -817,7 +829,7 @@ private fun DriverExperienceActions(rideId: String) {
         confirmation?.let { Text(it, color = Color(0xFF209454), fontSize = 12.sp) }
         error?.let { Text(it, color = MaterialTheme.colorScheme.error, fontSize = 12.sp) }
     }
-    if (ratingOpen) DriverRatingDialog(onDismiss = { ratingOpen = false }) { stars, tags, comment ->
+    if (ratingOpen) DriverRatingDialog(busy=busy,error=error,onDismiss = { ratingOpen = false }) { stars, tags, comment ->
         scope.launch {
             busy = true; error = null
             runCatching {
@@ -828,7 +840,7 @@ private fun DriverExperienceActions(rideId: String) {
             busy = false
         }
     }
-    if (supportOpen) DriverSupportDialog(onDismiss = { supportOpen = false }) { category, description ->
+    if (supportOpen) DriverSupportDialog(busy=busy,error=error,onDismiss = { supportOpen = false }) { category, description ->
         scope.launch {
             busy = true; error = null
             runCatching {
@@ -842,12 +854,12 @@ private fun DriverExperienceActions(rideId: String) {
 }
 
 @Composable
-private fun DriverRatingDialog(onDismiss: () -> Unit, onSubmit: (Int, List<String>, String) -> Unit) {
+private fun DriverRatingDialog(busy: Boolean=false,error: String?=null,onDismiss: () -> Unit, onSubmit: (Int, List<String>, String) -> Unit) {
     var stars by remember { mutableStateOf(5) }
     var comment by remember { mutableStateOf("") }
     var selected by remember { mutableStateOf(setOf<String>()) }
     val tags = listOf("RESPECTFUL" to "Respectful", "CLEAR_COMMUNICATION" to "Clear communication", "EASY_PICKUP" to "Easy pickup")
-    AlertDialog(onDismissRequest = onDismiss, title = { Text("Rate your rider") }, text = {
+    AlertDialog(onDismissRequest={if(!busy)onDismiss()}, title = { Text("Rate your rider") }, text = {
         Column(Modifier.verticalScroll(rememberScrollState()).imePadding(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
                 (1..5).forEach { value -> IconButton(onClick = { stars = value }) {
@@ -858,25 +870,27 @@ private fun DriverRatingDialog(onDismiss: () -> Unit, onSubmit: (Int, List<Strin
                 selected = if (key in selected) selected - key else selected + key
             }, label = { Text(label) }, leadingIcon = if (key in selected) {{ Icon(Icons.Default.Check, null) }} else null) }
             OutlinedTextField(comment, { comment = it.take(500) }, Modifier.fillMaxWidth(), label = { Text("Private feedback (optional)") }, minLines = 3)
+            error?.let { Text(it,color=MaterialTheme.colorScheme.error) }
         }
-    }, confirmButton = { Button(onClick = { onSubmit(stars, selected.toList(), comment.trim()) }) { Text("Save rating") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } })
+    }, confirmButton = { Button(enabled=!busy,onClick = { onSubmit(stars, selected.toList(), comment.trim()) }) { Text(if(busy) "Saving…" else "Save rating") } },
+        dismissButton = { TextButton(onClick=onDismiss,enabled=!busy) { Text("Cancel") } })
 }
 
 @Composable
-private fun DriverSupportDialog(onDismiss: () -> Unit, onSubmit: (String, String) -> Unit) {
+private fun DriverSupportDialog(busy: Boolean=false,error: String?=null,onDismiss: () -> Unit, onSubmit: (String, String) -> Unit) {
     var category by remember { mutableStateOf("PASSENGER") }
     var description by remember { mutableStateOf("") }
-    AlertDialog(onDismissRequest = onDismiss, title = { Text("Trip support") }, text = {
+    AlertDialog(onDismissRequest={if(!busy)onDismiss()}, title = { Text("Trip support") }, text = {
         Column(Modifier.verticalScroll(rememberScrollState()).imePadding(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             listOf("PASSENGER" to "Passenger concern", "SAFETY" to "Safety", "FARE" to "Fare or earnings", "APP" to "App issue", "OTHER" to "Other").forEach { (key, label) ->
                 FilterChip(selected = category == key, onClick = { category = key }, label = { Text(label) })
             }
             OutlinedTextField(description, { description = it.take(1000) }, Modifier.fillMaxWidth(), label = { Text("Describe the issue") }, minLines = 4,
                 supportingText = { Text("${description.trim().length}/1000 · at least 10 characters") })
+            error?.let { Text(it,color=MaterialTheme.colorScheme.error) }
         }
-    }, confirmButton = { Button(enabled = description.trim().length >= 10, onClick = { onSubmit(category, description.trim()) }) { Text("Submit case") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } })
+    }, confirmButton = { Button(enabled=!busy && description.trim().length>=10, onClick = { onSubmit(category, description.trim()) }) { Text(if(busy) "Sending…" else "Submit case") } },
+        dismissButton = { TextButton(onClick=onDismiss,enabled=!busy) { Text("Cancel") } })
 }
 
 @Composable
@@ -898,7 +912,7 @@ private fun AccountScreen(profile: DriverProfile, tripCount: Int, onSave: (Strin
             Box(contentAlignment = Alignment.Center) { Icon(Icons.Default.Person, null, Modifier.size(38.dp)) }
         }
         Text(profile.name, fontSize = 25.sp, fontWeight = FontWeight.Bold)
-        Text("Development driver · $tripCount completed trips", color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text("$tripCount completed trips · driver account", color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(Modifier.height(12.dp))
         Text("YOUR ACCOUNT", modifier = Modifier.fillMaxWidth(), fontWeight = FontWeight.Bold)
         AccountRow(Icons.Default.Person, "Profile and vehicle", "Name, car and licence plate") { editing = true }
@@ -1105,7 +1119,7 @@ private fun EmptyTripsPreview() {
 @Composable
 private fun EmptyEarningsPreview() {
     com.ridenova.driver.ui.theme.RideNovaDriverTheme {
-        Surface { EarningsScreen(DriverUiState(), emptyList()) }
+        Surface { EarningsScreen(DriverUiState(), emptyList(), {}) }
     }
 }
 
@@ -1158,7 +1172,7 @@ private fun DriverIdleHome(state: DriverUiState, onToggle: () -> Unit, onDemo: (
             Column {
                 Column(Modifier.fillMaxWidth().heightIn(max = dockLimit).verticalScroll(rememberScrollState()).padding(start = 20.dp, end = 20.dp, top = 18.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Box(Modifier.align(Alignment.CenterHorizontally).width(36.dp).height(4.dp).clip(CircleShape).background(MaterialTheme.colorScheme.outline))
+                    Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(8.dp)) { Icon(if(online) Icons.Default.RadioButtonChecked else Icons.Default.RadioButtonUnchecked,null,Modifier.size(16.dp),tint=MaterialTheme.colorScheme.primary);Text(if(online) "DRIVER AVAILABILITY · ONLINE" else "DRIVER AVAILABILITY · OFFLINE",style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.onSurfaceVariant) }
                     Text(title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
                     Text(detail.orEmpty(), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
                     Text("${state.todayTrips} trips today · ${state.onlineMinutes / 60}h ${state.onlineMinutes % 60}m online",

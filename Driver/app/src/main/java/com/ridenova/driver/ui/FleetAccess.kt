@@ -93,16 +93,7 @@ private fun FleetSignIn(onAuthenticated: (String) -> Unit) {
         else -> identifier.isNotBlank() && password.isNotBlank()
     }
     val listState = rememberLazyListState()
-    val density = LocalDensity.current
-    val imeVisible = WindowInsets.ime.getBottom(density) > 0
-    LaunchedEffect(imeVisible, mode) {
-        // Compose keeps the focused row anchored after some keyboards close. Resetting
-        // the list prevents the mostly-empty viewport shown in the Build 34 screenshots.
-        if (!imeVisible && listState.firstVisibleItemIndex > 0) {
-            delay(80)
-            listState.animateScrollToItem(0)
-        }
-    }
+    LaunchedEffect(mode) { listState.scrollToItem(0) }
 
     fun changeMode(next: String) {
         mode = next; password = ""; confirmation = ""; recovery = ""; error = null
@@ -114,20 +105,13 @@ private fun FleetSignIn(onAuthenticated: (String) -> Unit) {
             contentWindowInsets = WindowInsets.safeDrawing) { safePadding ->
             LazyColumn(
                 state = listState,
-                modifier = Modifier.fillMaxSize().padding(safePadding).imePadding(),
+                modifier = Modifier.fillMaxSize().padding(safePadding).consumeWindowInsets(safePadding).imePadding(),
                 contentPadding = PaddingValues(start = 22.dp, top = 20.dp, end = 22.dp, bottom = 48.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
                 item {
-                    Surface(shape = RoundedCornerShape(28.dp), color = MaterialTheme.colorScheme.primaryContainer) {
-                        Column(Modifier.fillMaxWidth().padding(22.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Image(painterResource(R.drawable.ridenova_driver_logo), "RideNova Driver logo",
-                                modifier = Modifier.size(52.dp).clip(RoundedCornerShape(14.dp)))
-                            Text("RideNova Driver", style = MaterialTheme.typography.headlineMedium,
-                                fontWeight = FontWeight.Bold)
-                            Text("Your trips, documents and earnings stay attached to your driver account.",
-                                color = MaterialTheme.colorScheme.onPrimaryContainer)
-                        }
+                    Row(Modifier.fillMaxWidth().padding(vertical=8.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(12.dp)) {
+                        NovaBrand(48);Column { Text("RideNova",style=MaterialTheme.typography.titleLarge);Text("DRIVER",style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.primary) }
                     }
                 }
                 item {
@@ -139,15 +123,14 @@ private fun FleetSignIn(onAuthenticated: (String) -> Unit) {
                     }
                 }
                 item {
-                    Text(if (recover) "Recover your account" else mode,
-                        style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                    NovaSection(if(recover) "Let’s get you back in" else if(create) "Start your driver journey" else "Welcome back",if(recover) "Use your recovery credential to set a new password." else if(create) "Create your account, then submit your documents for review." else "Sign in to see your trips and earnings.")
                 }
                 if (create) {
                     item { AccessField(username, { username = it.take(40) }, "Username", Icons.Default.Person,
                         "3–40 letters, numbers, dots, underscores or hyphens", !busy,
                         KeyboardOptions(imeAction = ImeAction.Next)) }
                     item { AccessField(phone, { phone = it.take(20) }, "Canadian mobile number", Icons.Default.Phone,
-                        "Used for sign-in on the local development server", !busy,
+                        "Use this number to sign in to your account", !busy,
                         KeyboardOptions(keyboardType = KeyboardType.Phone, imeAction = ImeAction.Next)) }
                 } else {
                     item { AccessField(identifier, { identifier = it.take(50) }, "Username or phone", Icons.Default.Badge,
@@ -158,20 +141,20 @@ private fun FleetSignIn(onAuthenticated: (String) -> Unit) {
                 item {
                     PasswordField(password, { password = it.take(128) },
                         if (recover) "New password" else "Password", !busy,
-                        Modifier.fillMaxWidth().focusRequester(passwordFocus), ImeAction.Next)
+                        Modifier.fillMaxWidth().focusRequester(passwordFocus), if(create || recover) ImeAction.Next else ImeAction.Done)
                 }
                 if (create || recover) {
                     item { PasswordField(confirmation, { confirmation = it.take(128) }, "Confirm password", !busy,
                         Modifier.fillMaxWidth(), ImeAction.Next) }
                     item {
-                        Text("Use 10–128 characters. Avoid reusing a password from another service.",
+                        Text(if(confirmation.isNotEmpty() && password!=confirmation) "Passwords don’t match yet." else "Use 10–128 characters. Both passwords must match.",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
                 if (create) {
                     item { HorizontalDivider() }
-                    item { Text("Driver and vehicle", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold) }
+                    item { NovaSection("Driver & vehicle","Tell us who’s driving and which vehicle you’ll use.") }
                     item { AccessField(name, { name = it.take(80) }, "Full driver name", Icons.Default.DriveEta,
                         null, !busy, KeyboardOptions(imeAction = ImeAction.Next)) }
                     item { AccessField(vehicle, { vehicle = it.take(100) }, "Vehicle", Icons.Default.DirectionsCar,
@@ -266,7 +249,7 @@ private fun AccessField(value: String, onChange: (String) -> Unit, label: String
     icon: androidx.compose.ui.graphics.vector.ImageVector, support: String?, enabled: Boolean,
     options: KeyboardOptions, actions: KeyboardActions = KeyboardActions()) {
     OutlinedTextField(value, onChange, modifier = Modifier.fillMaxWidth(), enabled = enabled, singleLine = true,
-        label = { Text(label) }, leadingIcon = { Icon(icon, null) },
+        shape=RoundedCornerShape(16.dp),label = { Text(label) }, leadingIcon = { Icon(icon, null) },
         supportingText = { if (support != null) Text(support) },
         keyboardOptions = options, keyboardActions = actions)
 }
@@ -274,11 +257,13 @@ private fun AccessField(value: String, onChange: (String) -> Unit, label: String
 @Composable
 private fun PasswordField(value: String, onChange: (String) -> Unit, label: String, enabled: Boolean,
     modifier: Modifier, action: ImeAction) {
+    val focus=LocalFocusManager.current
     var visible by rememberSaveable { mutableStateOf(false) }
     OutlinedTextField(value, onChange, modifier = modifier, enabled = enabled, singleLine = true,
-        label = { Text(label) }, leadingIcon = { Icon(Icons.Default.Lock, null) },
+        shape=RoundedCornerShape(16.dp),label = { Text(label) }, leadingIcon = { Icon(Icons.Default.Lock, null) },
         visualTransformation = if (visible) VisualTransformation.None else PasswordVisualTransformation(),
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = action),
+        keyboardActions=KeyboardActions(onDone={focus.clearFocus()}),
         trailingIcon = { IconButton(onClick = { visible = !visible }) {
             Icon(if (visible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
                 if (visible) "Hide password" else "Show password")

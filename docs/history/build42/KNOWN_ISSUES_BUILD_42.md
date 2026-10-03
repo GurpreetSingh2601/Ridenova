@@ -1,3 +1,5 @@
+> Historical Build 42 record. For this release, read the root START_HERE_BUILD_42_1.md and TEST_RESULTS_BUILD_42_1.md.
+
 # Build 42 limitations and follow-up
 
 - Android Gradle compilation could not run here: Gradle 9.6 distribution was absent and external network access failed. GitHub Actions/Windows compilation and device tests are required.

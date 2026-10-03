@@ -74,7 +74,9 @@ fun FleetDocuments(onBack: () -> Unit) {
     LaunchedEffect(Unit) { try { refresh() } catch (e: CancellationException) { throw e } catch (e: Exception) { error = e.localizedMessage } }
     Column(Modifier.fillMaxSize().imePadding().verticalScroll(rememberScrollState()).padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         TextButton(onClick = onBack) { Text("Back to account") }
-        Text("Onboarding & documents", style = MaterialTheme.typography.headlineSmall)
+        NovaSection("Ready to drive","Submit your documents and follow their review status.")
+        val approved=rows.count { it.optString("status")=="APPROVED" && !it.optBoolean("expired") }
+        if(rows.isNotEmpty()) { Text("$approved of ${rows.size} documents approved",style=MaterialTheme.typography.titleMedium);LinearProgressIndicator(progress={approved.toFloat()/rows.size},modifier=Modifier.fillMaxWidth()) }
         DriverDocumentStatus(status)
         if (status == "Loading…" && error == null) LinearProgressIndicator(Modifier.fillMaxWidth())
         Text("Four approved, unexpired documents and admin approval are needed to receive requests. Use sample files only; this is a development review workflow.")
@@ -99,7 +101,7 @@ fun FleetDocuments(onBack: () -> Unit) {
         }
         rows.forEach { doc ->
             Card(Modifier.fillMaxWidth()) {
-                Column(Modifier.padding(12.dp)) {
+                Column(Modifier.padding(18.dp),verticalArrangement=Arrangement.spacedBy(6.dp)) {
                     Text(doc.getString("kind").lowercase().replaceFirstChar { it.titlecase() }, style = MaterialTheme.typography.titleMedium)
                     Text(doc.getString("status") + if (doc.optBoolean("expired")) " · EXPIRED" else "")
                     Text("Expiry: " + doc.optString("expiryDate", "Not set"))
@@ -124,7 +126,7 @@ fun FleetDocuments(onBack: () -> Unit) {
             busy = true
             scope.launch { try { refresh(); error = null } catch (e: CancellationException) { throw e } catch (e: Exception) { error = e.localizedMessage } finally { busy = false } }
         }) { Text("Refresh review status") }
-        error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+        error?.let { NovaNotice("Document update failed",it,true) }
     }
 }
 

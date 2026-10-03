@@ -1,6 +1,6 @@
 # RideNova development rules
 
-Updated for Build 42 staging candidate on 2026-09-28. Preserve this file in every later build.
+Updated for Build 42.1 UI/UX on 2026-10-03 UTC. Preserve this file in every later build.
 
 ## Architecture
 
@@ -37,15 +37,15 @@ Updated for Build 42 staging candidate on 2026-09-28. Preserve this file in ever
 - Test the final release from a short Windows path and verify ZIP CRC/inventory.
 - Record exactly what ran and what could not. Source preflight is not compilation; development tests are not production approval.
 
-## Known Build 42 boundaries
+## Known current boundaries
 
-- The CLI is development-only. Gunicorn/WSGI and invitation restrictions serve controlled staging. Build 42 is not yet deployed or provider verified.
-- PostgreSQL runtime validation and Build 42 Android compilation are blocked in this workspace. Do not label this candidate as the completed milestone.
+- The CLI is development-only. Gunicorn/WSGI and invitation restrictions serve controlled staging. The user has a Build 42 Render setup; this Build 42.1 revision has not been deployed or provider-verified by this work.
+- Build 42.1 passed 12 disposable PostgreSQL tests and both Android debug/staging compilations here. Device, hosted performance and real-provider acceptance remain distinct gates.
 - Staging has conservative global request serialization/rate caps. Build 42 batches rate checks and logs phase timings; do not remove the request gate until atomic dispatch has independent guarantees.
 - Managed backups, monitoring notifications and CI/CD account configuration require authorized setup and verification.
 - OTP delivery, payouts and identity/document verification remain simulations. Stripe test payments are implemented behind test-key configuration; no live charge path is enabled.
 - Passenger-selected Google routes are strictly validated and quote-bound, but production should request routes server-side.
-- Android compilation and physical-device acceptance remain required for the new staging variants on a configured workstation or CI.
+- Physical-device acceptance remains required after installing the compiled sources with the correct staging URL and Maps key.
 - BC launch, privacy, insurance, transportation, tax, worker-classification and accessibility obligations need qualified review.
 
 ## Product strategy through v1.0
@@ -62,3 +62,13 @@ Updated for Build 42 staging candidate on 2026-09-28. Preserve this file in ever
 - A Stripe test card is distinct from a pre-existing development display reference. Test payments are explicit completed-ride actions; no public charge or payout can occur.
 - Every monetary operation uses fixed idempotency keys, server-owned integer CAD cents, provider verification and unique ledger entries. Reconcile an ambiguous result before a different attempt.
 - A boost is funded by the platform, capped by an atomic reservation, recorded once per ride and does not change the accepted passenger price.
+
+## Build 42.1 UI maintenance rules
+
+- Reuse each app's canonical launcher vector for brand marks; keep the existing Canadian tagline.
+- Share typography, spacing, corners and semantic colours across screens. Do not equate styling with implementation of a service.
+- Consume Scaffold insets before applying additional IME padding. Keep one scrolling form surface; avoid forced scrolling when a keyboard closes.
+- Keep offer actions reachable independently of scrolling details. Respect large text and small/landscape screens.
+- Keep Admin refreshes scoped to the visible workspace, with loading/error/freshness state. Abort/reject obsolete session requests and clear data on logout/401.
+- Run the Admin browser regression after UI/request-lifecycle changes, in addition to server RBAC tests. Screenshots must label synthetic fixtures as such.
+- Preserve Build 42 migration checksums. Build 42.1 adds no schema change; API `revision` remains the Git commit while `releaseRevision` identifies this release.

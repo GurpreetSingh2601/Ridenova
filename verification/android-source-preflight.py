@@ -24,8 +24,8 @@ def balanced_kotlin(path):
 def main():
     passenger_gradle = (ROOT / 'Passenger/app/build.gradle.kts').read_text(encoding='utf-8')
     driver_gradle = (ROOT / 'Driver/app/build.gradle.kts').read_text(encoding='utf-8')
-    assert 'versionName = "0.34.0-build42"' in passenger_gradle
-    assert 'versionName = "0.19.0-build42"' in driver_gradle
+    assert 'versionName = "0.34.1-build42.1"' in passenger_gradle
+    assert 'versionName = "0.19.1-build42.1"' in driver_gradle
     for project in ('Passenger', 'Driver'):
         staging_manifest = ROOT / project / 'app/src/staging/AndroidManifest.xml'
         ET.parse(staging_manifest)

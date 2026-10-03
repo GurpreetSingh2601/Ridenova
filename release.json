@@ -1,13 +1,37 @@
 {
   "build": 42,
   "status": "staging-candidate",
-  "date": "2026-09-28",
-  "passenger": {"versionName": "0.34.0-build42", "versionCode": 44},
-  "driver": {"versionName": "0.19.0-build42", "versionCode": 40},
-  "api": "42.0",
-  "admin": "0.9.0",
+  "date": "2026-10-03",
+  "passenger": {
+    "versionName": "0.34.1-build42.1",
+    "versionCode": 45
+  },
+  "driver": {
+    "versionName": "0.19.1-build42.1",
+    "versionCode": 41
+  },
+  "api": "42.1",
+  "admin": "0.9.1",
   "sharedBackend": "Passenger/backend",
   "deployed": false,
   "publicLaunchApproved": false,
-  "pendingGates": ["postgres-execution", "android-compilation", "stripe-test-provider", "authorized-render-deployment", "hosted-performance", "real-device-acceptance"]
+  "pendingGates": [
+    "real-device-acceptance",
+    "authorized-render-deployment-of-42.1",
+    "hosted-performance",
+    "stripe-test-provider-recheck"
+  ],
+  "revision": "42.1",
+  "verified": {
+    "backendTests": 153,
+    "postgresTests": 12,
+    "adminBrowser": "9 workspaces; 5 roles; desktop/mobile; recovery",
+    "android": [
+      "Passenger debug",
+      "Passenger staging",
+      "Driver debug",
+      "Driver staging"
+    ],
+    "databaseMigrationAdded": false
+  }
 }

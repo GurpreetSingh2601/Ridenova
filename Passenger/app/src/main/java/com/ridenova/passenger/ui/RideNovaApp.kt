@@ -19,6 +19,11 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.semantics.*
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -845,8 +850,8 @@ private fun PostTripExperienceSheet(trip: RideTrip, repository: RideNovaReposito
     var busy by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
     var supportOpen by remember { mutableStateOf(false) }
-    ModalBottomSheet(onDismissRequest = onDismiss, dragHandle = { BottomSheetDefaults.DragHandle() }) {
-        Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 22.dp, vertical = 8.dp),
+    ModalBottomSheet(onDismissRequest={if(!busy)onDismiss()}, dragHandle = { BottomSheetDefaults.DragHandle() }) {
+        Column(Modifier.fillMaxWidth().navigationBarsPadding().verticalScroll(rememberScrollState()).padding(horizontal=22.dp,vertical=8.dp),
             horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Icon(Icons.Default.CheckCircle, null, Modifier.size(42.dp), tint = NovaSuccess)
             Text("Ride complete", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
@@ -869,13 +874,13 @@ private fun PostTripExperienceSheet(trip: RideTrip, repository: RideNovaReposito
             }, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)) {
                 Text(if (busy) "Saving…" else "Submit driver rating")
             }
-            OutlinedButton(onClick = { supportOpen = true }, modifier = Modifier.fillMaxWidth()) {
+            OutlinedButton(onClick={supportOpen=true},enabled=!busy,modifier=Modifier.fillMaxWidth()) {
                 Icon(Icons.Default.Shield, null); Spacer(Modifier.width(8.dp)); Text("Safety or trip support")
             }
-            TextButton(onClick = onDismiss) { Text("Not now") }
+            TextButton(onClick=onDismiss,enabled=!busy) { Text("Not now") }
         }
     }
-    if (supportOpen) PassengerSupportDialog(onDismiss = { supportOpen = false }) { category, description ->
+    if (supportOpen) PassengerSupportDialog(busy=busy,error=error,onDismiss={supportOpen=false}) { category, description ->
         scope.launch {
             busy = true; error = null
             runCatching { repository.createSupportCase(trip.id, category, description) }
@@ -888,7 +893,7 @@ private fun PostTripExperienceSheet(trip: RideTrip, repository: RideNovaReposito
 
 @Composable
 private fun SplashScreen(onDone: () -> Unit) {
-    LaunchedEffect(Unit) { delay(950); onDone() }
+    LaunchedEffect(Unit) { delay(350); onDone() }
     Box(
         Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(NovaMidnight, NovaNavy))),
         contentAlignment = Alignment.Center
@@ -904,14 +909,7 @@ private fun SplashScreen(onDone: () -> Unit) {
 
 @Composable
 private fun NovaMark(size: Int = 56) {
-    Box(
-        Modifier.size(size.dp).clip(RoundedCornerShape((size * .28).dp))
-            .background(Brush.linearGradient(listOf(NovaBlue, NovaViolet))),
-        contentAlignment = Alignment.Center
-    ) {
-        Text("R", color = Color.White, fontSize = (size * .52).sp, fontWeight = FontWeight.Black)
-        Text("✦", color = Color.White, fontSize = (size * .22).sp, modifier = Modifier.align(Alignment.TopEnd).padding(5.dp))
-    }
+    NovaBrand(size)
 }
 
 @Composable
@@ -938,7 +936,7 @@ private fun WelcomeScreen(onStart: () -> Unit) {
             )
             Spacer(Modifier.height(12.dp))
             Text(
-                "A premium, transparent ride experience designed around safety and trust.",
+                "Choose your destination, review your fare, and follow your ride in one place.",
                 fontSize = 18.sp,
                 lineHeight = 26.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -967,7 +965,7 @@ private fun WelcomeScreen(onStart: () -> Unit) {
         }
 
         Column {
-            FeatureRow(Icons.Default.VerifiedUser, "Safety-first experience")
+            FeatureRow(Icons.Default.VerifiedUser, "Trip PIN and safety tools")
             FeatureRow(Icons.Default.Payments, "Clear upfront pricing")
             FeatureRow(Icons.Default.Language, "English · Français · Español")
             Spacer(Modifier.height(16.dp))
@@ -976,7 +974,7 @@ private fun WelcomeScreen(onStart: () -> Unit) {
                 "New riders create an account; returning riders sign in with the same phone number.",
                 modifier = Modifier.fillMaxWidth().padding(top = 9.dp),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontSize = 11.sp
+                fontSize = 12.sp
             )
         }
     }
@@ -1115,22 +1113,24 @@ private fun FeatureRow(icon: androidx.compose.ui.graphics.vector.ImageVector, te
 
 @Composable
 private fun PhoneScreen(initialPhone: String, busy: Boolean, errorMessage: String?, backendMode: Boolean, onBack: () -> Unit, onContinue: (String) -> Unit) {
-    var phone by remember { mutableStateOf(initialPhone.filter(Char::isDigit).takeLast(10)) }
-    FormScaffold(title = stringResource(R.string.phone_title), subtitle = "We’ll send a verification code to confirm it’s you.") {
+    val focus = LocalFocusManager.current
+    var phone by rememberSaveable { mutableStateOf(initialPhone.filter(Char::isDigit).takeLast(10)) }
+    FormScaffold(title = stringResource(R.string.phone_title), subtitle = if (BuildConfig.RIDENOVA_ENVIRONMENT == "staging") "Use the mobile number on your testing invitation." else "Use your mobile number to create an account or sign in.") {
         TextButton(onClick = onBack, enabled = !busy) { Icon(Icons.Default.ArrowBack, "Back"); Spacer(Modifier.width(6.dp)); Text("Back") }
         OutlinedTextField(phone, { phone = it.filter(Char::isDigit).take(10) }, modifier = Modifier.fillMaxWidth(),
             label = { Text("Canadian mobile number") }, prefix = { Text("+1  ") },
             supportingText = { Text("10 digits · standard messaging may apply when SMS is connected") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone), singleLine = true, enabled = !busy)
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone, imeAction=ImeAction.Done), keyboardActions=KeyboardActions(onDone={ if(phone.length==10 && !busy) { focus.clearFocus();onContinue("+1$phone") } }), singleLine=true,enabled=!busy)
         errorMessage?.let { Text(it, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(top = 10.dp)) }
-        Spacer(Modifier.height(16.dp)); PrimaryButton(if (busy) "Requesting code…" else "Send verification code", { onContinue("+1$phone") }, enabled = phone.length == 10 && !busy)
-        Spacer(Modifier.height(16.dp)); Text(if (backendMode) "Development authentication: the code will appear on the next screen. No SMS is sent." else "Offline prototype: use code 123456.", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
+        Spacer(Modifier.height(16.dp)); PrimaryButton(if (busy) "Requesting code…" else "Send verification code", { onContinue("+1$phone") }, enabled = phone.length == 10 && !busy, busy = busy)
+        Spacer(Modifier.height(16.dp)); Text(if (BuildConfig.RIDENOVA_ENVIRONMENT == "staging") "Invited testers only. Use your invitation code on the next screen; no SMS is sent." else if (backendMode) "Test mode: your code appears on the next screen. No SMS is sent." else "Offline prototype: use code 123456.", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
     }
 }
 
 @Composable
 private fun OtpScreen(phone: String, developmentCode: String?, busy: Boolean, errorMessage: String?, onBack: () -> Unit, onVerified: (String) -> Unit) {
-    var otp by remember { mutableStateOf("") }
+    val focus = LocalFocusManager.current
+    var otp by rememberSaveable(phone) { mutableStateOf("") }
     FormScaffold(title = stringResource(R.string.otp_title), subtitle = "Enter the six-digit code for $phone.") {
         if (BuildConfig.RIDENOVA_ENVIRONMENT == "staging") {
             Text("Staging test: use the code provided with your invitation. No SMS is sent.", color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -1142,9 +1142,9 @@ private fun OtpScreen(phone: String, developmentCode: String?, busy: Boolean, er
             }
             Spacer(Modifier.height(12.dp))
         }
-        OutlinedTextField(otp, { otp = it.filter(Char::isDigit).take(6) }, modifier = Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.otp_hint)) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), singleLine = true, enabled = !busy)
+        OutlinedTextField(otp, { otp = it.filter(Char::isDigit).take(6) }, modifier = Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.otp_hint)) }, keyboardOptions=KeyboardOptions(keyboardType=KeyboardType.Number,imeAction=ImeAction.Done),keyboardActions=KeyboardActions(onDone={if(otp.length==6 && !busy){focus.clearFocus();onVerified(otp)}}),singleLine=true,enabled=!busy)
         errorMessage?.let { Text(it, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(top = 10.dp)) }
-        Spacer(Modifier.height(16.dp)); PrimaryButton(if (busy) "Verifying…" else "Verify", { onVerified(otp) }, enabled = otp.length == 6 && !busy)
+        Spacer(Modifier.height(16.dp)); PrimaryButton(if (busy) "Verifying…" else "Verify", { onVerified(otp) }, enabled = otp.length == 6 && !busy, busy = busy)
         Spacer(Modifier.height(12.dp)); Text("The code expires after five minutes. Return to the phone screen to request another code.", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
     }
 }
@@ -1155,7 +1155,7 @@ private fun ProfileScreen(initial: RiderProfile?, phone: String, busy: Boolean, 
     var last by remember(initial) { mutableStateOf(initial?.lastName.orEmpty()) }
     var email by remember(initial) { mutableStateOf(initial?.email.orEmpty()) }
     val emailValid = email.isBlank() || android.util.Patterns.EMAIL_ADDRESS.matcher(email.trim()).matches()
-    FormScaffold(title = title, subtitle = "Your name identifies your passenger account. A profile photo can be added later.") {
+    FormScaffold(title = title, subtitle = "Let your driver know who they’re picking up.") {
         onBack?.let { TextButton(onClick = it, enabled = !busy) { Icon(Icons.Default.ArrowBack, "Back"); Spacer(Modifier.width(6.dp)); Text("Back") } }
         Box(Modifier.size(82.dp).clip(CircleShape).background(MaterialTheme.colorScheme.surfaceVariant).align(Alignment.CenterHorizontally), contentAlignment = Alignment.Center) { Icon(Icons.Default.Person, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(40.dp)) }
         Spacer(Modifier.height(18.dp))
@@ -1164,26 +1164,20 @@ private fun ProfileScreen(initial: RiderProfile?, phone: String, busy: Boolean, 
         Spacer(Modifier.height(10.dp)); OutlinedTextField(email, { email = it.take(254) }, Modifier.fillMaxWidth(), label = { Text("Email (optional)") }, isError = !emailValid, supportingText = { if (!emailValid) Text("Enter a valid email or leave it blank") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email), singleLine = true, enabled = !busy)
         if (phone.isNotBlank()) { Spacer(Modifier.height(10.dp)); Text("Account phone: $phone", color = MaterialTheme.colorScheme.onSurfaceVariant) }
         errorMessage?.let { Text(it, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(top = 10.dp)) }
-        Spacer(Modifier.height(18.dp)); PrimaryButton(if (busy) "Saving…" else buttonLabel, { onDone(RiderProfile(first.trim(), last.trim(), email.trim(), phone)) }, enabled = first.isNotBlank() && last.isNotBlank() && emailValid && !busy)
+        Spacer(Modifier.height(18.dp)); PrimaryButton(if (busy) "Saving…" else buttonLabel, { onDone(RiderProfile(first.trim(), last.trim(), email.trim(), phone)) }, enabled = first.isNotBlank() && last.isNotBlank() && emailValid && !busy, busy = busy)
     }
 }
 
 @Composable
 private fun FormScaffold(title: String, subtitle: String, content: @Composable ColumnScope.() -> Unit) {
-    Column(
-        Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .safeDrawingPadding()
-            .imePadding()
-            .verticalScroll(rememberScrollState())
-            .padding(26.dp)
-    ) {
-        Spacer(Modifier.height(36.dp)); NovaMark(48); Spacer(Modifier.height(30.dp))
-        Text(title, fontSize = 28.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
-        Spacer(Modifier.height(8.dp)); Text(subtitle, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Spacer(Modifier.height(28.dp)); content()
-        Spacer(Modifier.height(28.dp))
+    Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).safeDrawingPadding().imePadding(), contentAlignment=Alignment.TopCenter) {
+        Column(Modifier.widthIn(max=560.dp).fillMaxWidth().fillMaxHeight().verticalScroll(rememberScrollState()).padding(24.dp)) {
+            Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(12.dp)) { NovaMark(44);Text("RideNova",style=MaterialTheme.typography.titleLarge) }
+            Spacer(Modifier.height(28.dp))
+            Text(title,style=MaterialTheme.typography.headlineMedium,modifier=Modifier.semantics { heading() })
+            Spacer(Modifier.height(8.dp));Text(subtitle,color=MaterialTheme.colorScheme.onSurfaceVariant)
+            Spacer(Modifier.height(24.dp));content();Spacer(Modifier.height(24.dp))
+        }
     }
 }
 
@@ -1209,14 +1203,14 @@ private fun HomeScreen(
             val cardLimit = maxHeight * 0.68f
             RideNovaMap(modifier = Modifier.fillMaxSize(), bottomContentPadding = homeCardHeight + 24.dp, onLocationResolved = { point, address -> onPickupResolved(point.latitude, point.longitude, address) })
             Column(Modifier.align(Alignment.TopStart).padding(18.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) { NovaMark(42); Spacer(Modifier.width(10.dp)); Text("RideNova", fontWeight = FontWeight.Bold, fontSize = 22.sp, color = MaterialTheme.colorScheme.onSurface) }
+                Surface(shape=RoundedCornerShape(18.dp),shadowElevation=2.dp) { Row(Modifier.padding(8.dp),verticalAlignment=Alignment.CenterVertically) { NovaMark(36);Spacer(Modifier.width(10.dp));Text("RideNova",style=MaterialTheme.typography.titleMedium);Spacer(Modifier.width(8.dp)) } }
             }
             Card(
                 Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(16.dp).onSizeChanged { homeCardHeight = with(homeDensity) { it.height.toDp() } },
                 shape = RoundedCornerShape(28.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
                 Column(Modifier.heightIn(max = cardLimit).verticalScroll(rememberScrollState()).padding(18.dp)) {
-                    Text("Good to see you", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("LET’S GET YOU THERE",style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
                     Text("Where can we take you?", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                     Spacer(Modifier.height(16.dp))
                     Surface(Modifier.fillMaxWidth().clickable(onClick = onSearchDestination), shape = RoundedCornerShape(18.dp), color = MaterialTheme.colorScheme.surfaceVariant) {
@@ -1263,7 +1257,7 @@ private fun HomeScreen(
                                 Spacer(Modifier.width(10.dp))
                                 Column(Modifier.weight(1f)) {
                                     Text(place.name, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                                    Text(place.address, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                    Text(place.address, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                                 }
                                 Icon(Icons.Default.ChevronRight, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
@@ -1289,7 +1283,7 @@ private fun QuickPlace(
             Spacer(Modifier.width(8.dp))
             Column(Modifier.weight(1f)) {
                 Text(text, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
-                Text(subtitle, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 10.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(subtitle, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
         }
     }
@@ -1679,7 +1673,7 @@ private fun RideSelectionScreen(
                                     }
                                 },
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                fontSize = 11.sp
+                                fontSize = 12.sp
                             )
                         }
                     }
@@ -1710,7 +1704,7 @@ private fun RideSelectionScreen(
                         else
                             "Approximate prototype estimate only. Final routing and pricing will be server-authoritative.",
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 11.sp
+                        fontSize = 12.sp
                     )
                     Spacer(Modifier.height(8.dp))
                 }
@@ -1864,7 +1858,7 @@ private fun RideCard(option: RideOption, selected: Boolean, onClick: () -> Unit)
         Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp)
-            .clickable(onClick = onClick),
+            .selectable(selected=selected,role=Role.RadioButton,onClick=onClick),
         shape = RoundedCornerShape(18.dp),
         border = androidx.compose.foundation.BorderStroke(if (selected) 1.8.dp else 1.dp, border),
         colors = CardDefaults.cardColors(
@@ -1959,11 +1953,12 @@ private fun ConfirmationScreen(
         bottomBar = {
             Surface(shadowElevation = 8.dp) {
                 Column(Modifier.navigationBarsPadding().padding(16.dp)) {
-                    errorMessage?.let { Text(it, color = MaterialTheme.colorScheme.error, fontSize = 12.sp); Spacer(Modifier.height(8.dp)) }
+                    errorMessage?.let { NovaNotice("Could not confirm ride",it,true);Spacer(Modifier.height(8.dp)) }
+                    if(reviewedOption != null && paymentMethod == null) TextButton(onClick=onOpenPayment,enabled=!busy) { Text("Choose a payment method to continue") }
                     PrimaryButton(
                         if (busy) "Please wait…" else if (reviewedOption == null) "Get current fare" else "Confirm $${"%.2f".format(option.fareCad)} CAD",
                         onRequest,
-                        enabled = !busy && (reviewedOption == null || paymentMethod != null)
+                        enabled = !busy && (reviewedOption == null || paymentMethod != null), busy = busy
                     )
                 }
             }
@@ -1980,12 +1975,12 @@ private fun ConfirmationScreen(
                         Spacer(Modifier.width(10.dp))
                         Column {
                             Text("${"%.1f".format(route.distanceKm)} km · about ${route.durationMinutes} min", fontWeight = FontWeight.SemiBold)
-                            Text(if (route.isApproximate) "Approximate route estimate" else "Selected Google road route", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 11.sp)
+                            Text(if (route.isApproximate) "Approximate route estimate" else "Selected Google road route", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
                         }
                     }
                 }
             }
-            routeChangeReason?.let { reason ->
+            routeChangeReason?.takeIf { it.isNotBlank() && it != "null" }?.let { reason ->
                 Spacer(Modifier.height(8.dp))
                 Text(reason, color = MaterialTheme.colorScheme.error, fontSize = 12.sp)
             }
@@ -1999,7 +1994,13 @@ private fun ConfirmationScreen(
             }
             Text(pickupEtaLabel, fontWeight = FontWeight.Bold, fontSize = 20.sp)
             Text(if (draft.scheduled) draft.scheduleLabel else stringResource(R.string.ride_now), color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Spacer(Modifier.height(20.dp)); FareRows(option)
+            Spacer(Modifier.height(20.dp))
+            Surface(shape=RoundedCornerShape(20.dp),color=MaterialTheme.colorScheme.surface) {
+                Column(Modifier.padding(16.dp)) { Text(if(reviewedOption==null) "Fare estimate" else "Your current fare",style=MaterialTheme.typography.titleMedium)
+                    Spacer(Modifier.height(8.dp));FareRows(option)
+                    Text("Total includes GST · CAD",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant) }
+            }
+            Spacer(Modifier.height(16.dp))
             Surface(
                 modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).clickable(onClick = onOpenPayment),
                 color = MaterialTheme.colorScheme.surfaceVariant
@@ -2017,7 +2018,7 @@ private fun ConfirmationScreen(
             SummaryRow("Cancellation", if (draft.scheduled) "Free while scheduled" else "Free for 2 minutes")
             Spacer(Modifier.height(18.dp)); Surface(shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.surfaceVariant) { Row(Modifier.padding(14.dp)) { Icon(Icons.Default.VerifiedUser, null, tint = NovaBlue); Spacer(Modifier.width(10.dp)); Text("Trip PIN and safety tools will be available when a driver is assigned.", fontSize = 13.sp) } }
             Spacer(Modifier.height(16.dp))
-            Text(if (reviewedOption == null) "Get the current fare, then review it before confirming. Development payment references never create a real charge." else "Review the refreshed route, GST-inclusive fare and selected payment method. Nearby-driver ETA refreshes from the latest online driver location; payments remain development-only.", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
+            Text(if (reviewedOption == null) "Get the current fare, then review it before confirming. Development payment references never create a real charge." else "Review your route and total before confirming. Test mode: no real payment is collected.", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
             Spacer(Modifier.height(8.dp))
         }
     }
@@ -2038,7 +2039,7 @@ private fun SummaryRow(label: String, value: String) {
 private fun FareRows(option: RideOption) {
     option.breakdown?.let { fare ->
         SummaryRow("Subtotal", "$${"%.2f".format(fare.subtotalCents / 100.0)} CAD")
-        SummaryRow("GST (included)", "$${"%.2f".format(fare.gstCents / 100.0)} CAD")
+        SummaryRow("GST", "$${"%.2f".format(fare.gstCents / 100.0)} CAD")
         SummaryRow("Total", "$${"%.2f".format(fare.totalCents / 100.0)} CAD")
     } ?: SummaryRow("Fare estimate", "$${"%.2f".format(option.fareCad)} CAD")
 }
@@ -2232,7 +2233,7 @@ private fun MatchingScreen(
                     },
                     modifier = Modifier.padding(horizontal = 20.dp, vertical = 9.dp),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontSize = 11.sp
+                    fontSize = 12.sp
                 )
             }
 
@@ -2330,7 +2331,7 @@ private fun MatchingScreen(
                                         if (backendMode) "$${"%.2f".format(trip.cancellationFeeAfterGraceCad)} development cancellation fee" else "$5.00 cancellation fee now applies",
                                     fontWeight = FontWeight.SemiBold
                                 )
-                                Text(if (backendMode) "Server time and policy determine the final fee; no actual charge is made." else "Prototype policy: 2-minute grace period after requesting.", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 11.sp)
+                                Text(if (backendMode) "Server time and policy determine the final fee; no actual charge is made." else "Prototype policy: 2-minute grace period after requesting.", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
                             }
                         }
                     }
@@ -2396,7 +2397,7 @@ private fun MatchingScreen(
                     Text(
                         if (backendMode) "Development ride · live driver updates · payments are simulated." else "Offline prototype: driver progress is simulated locally. No real driver is contacted or payment collected.",
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 11.sp
+                        fontSize = 12.sp
                     )
                 }
             }
@@ -2497,6 +2498,7 @@ private fun TripsScreen(
 ) {
     val active = trips.filter { it.status in setOf(TripStatus.SEARCHING, TripStatus.DRIVER_ASSIGNED, TripStatus.DRIVER_ARRIVED, TripStatus.TRIP_STARTED) }
     val scheduled = trips.filter { it.status == TripStatus.SCHEDULED }.sortedBy { it.draft.scheduledAtEpochMs ?: Long.MAX_VALUE }
+    var recentFilter by rememberSaveable { mutableStateOf("All") }
     val recent = trips.filter { it.status in setOf(TripStatus.COMPLETED, TripStatus.CANCELLED_BY_RIDER, TripStatus.SCHEDULE_EXPIRED) }
         .sortedByDescending { it.updatedAtEpochMs }
     var cancelTarget by remember { mutableStateOf<RideTrip?>(null) }
@@ -2558,12 +2560,16 @@ private fun TripsScreen(
                 }
             }
 
-            Text("Recent", fontWeight = FontWeight.Bold, fontSize = 18.sp)
-            if (recent.isEmpty()) {
-                EmptyTripCard("No past rides yet", "Your completed and cancelled rides will appear here.")
+            Text("Recent",fontWeight=FontWeight.Bold,fontSize=18.sp)
+            Row(Modifier.horizontalScroll(rememberScrollState()),horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+                listOf("All","Completed","Cancelled").forEach { label -> FilterChip(selected=recentFilter==label,onClick={recentFilter=label},label={Text(label)}) }
+            }
+            val visibleRecent=recent.filter { recentFilter=="All" || (recentFilter=="Completed" && it.status==TripStatus.COMPLETED) || (recentFilter=="Cancelled" && it.status!=TripStatus.COMPLETED) }
+            if(visibleRecent.isEmpty()) {
+                EmptyTripCard(if(recent.isEmpty()) "No past rides yet" else "No rides in this filter", "Your completed and cancelled rides will appear here.")
                 OutlinedButton(onClick = { navigateTopLevel(nav, Routes.HOME) }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text("Find a ride") }
             } else {
-                recent.forEach { trip -> TripCard(trip = trip, onClick = { onOpenTrip(trip.id) }) }
+                visibleRecent.forEach { trip -> TripCard(trip = trip, onClick = { onOpenTrip(trip.id) }) }
             }
             Spacer(Modifier.height(8.dp))
         }
@@ -2615,7 +2621,7 @@ private fun TripCard(
                             "${tripEventLabel(trip.status)} ${tripDateTime(trip.updatedAtEpochMs)}"
                         else "Requested ${tripDateTime(trip.requestedAtEpochMs)}",
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 11.sp
+                        fontSize = 12.sp
                     )
                 }
                 Text("$${"%.2f".format(trip.option.fareCad)}", fontWeight = FontWeight.Bold)
@@ -2750,7 +2756,7 @@ private fun TripDetailScreen(
                         else -> "Trip route unavailable · pickup and destination coordinates are missing"
                     },
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontSize = 11.sp
+                    fontSize = 12.sp
                 )
                 Column {
                     Text(
@@ -2826,13 +2832,13 @@ private fun TripDetailScreen(
                         Button(onClick = {
                             paymentBusy = true
                             scope.launch {
-                                paymentFeedback = runCatching { "Stripe test authorization: " + onAuthorizeTest(trip.id) }
+                                paymentFeedback = runCatching { when(val status=onAuthorizeTest(trip.id)) { "requires_capture" -> "Test payment authorized. Waiting for an Owner to capture it.";"succeeded" -> "Test payment captured successfully.";else -> "Test payment status: $status" } }
                                     .getOrElse { it.localizedMessage ?: "Test authorization failed" }
                                 paymentBusy = false
                             }
                         }, enabled = !paymentBusy) { Text("Authorize test payment") }
                         paymentFeedback?.let { Text(it, fontSize = 12.sp) }
-                        Text("Test mode only. Ask an Owner to capture or refund it in Finance. No real money moves.", fontSize = 11.sp)
+                        Text("Test mode only. Ask an Owner to capture or refund it in Finance. No real money moves.", fontSize = 12.sp)
                     }
                 }
 
@@ -2843,14 +2849,14 @@ private fun TripDetailScreen(
                     Text(
                         "Uses this destination and ride category. Your current GPS location becomes the new pickup.",
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 11.sp
+                        fontSize = 12.sp
                     )
                 }
 
                 Text(
                     "Trip ID ${trip.id}",
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontSize = 11.sp
+                    fontSize = 12.sp
                 )
                 Spacer(Modifier.height(12.dp))
             }
@@ -2897,7 +2903,7 @@ private fun PassengerExperienceCard(tripId: String, repository: RideNovaReposito
             if (cases > 0) Text("$cases support ${if (cases == 1) "case" else "cases"} linked to this trip", fontSize = 12.sp)
         }
     }
-    if (ratingOpen) PassengerRatingDialog(experience?.rating?.stars ?: 5, experience?.rating?.comment.orEmpty(),
+    if (ratingOpen) PassengerRatingDialog(experience?.rating?.stars ?: 5,experience?.rating?.comment.orEmpty(),busy=loading,error=error,
         onDismiss = { ratingOpen = false }, onSubmit = { stars, tags, comment ->
             scope.launch {
                 loading = true; error = null
@@ -2907,7 +2913,7 @@ private fun PassengerExperienceCard(tripId: String, repository: RideNovaReposito
                 loading = false
             }
         })
-    if (supportOpen) PassengerSupportDialog(onDismiss = { supportOpen = false }, onSubmit = { category, description ->
+    if (supportOpen) PassengerSupportDialog(busy=loading,error=error,onDismiss={supportOpen=false},onSubmit = { category, description ->
         scope.launch {
             loading = true; error = null
             runCatching { repository.createSupportCase(tripId, category, description) }
@@ -2921,13 +2927,13 @@ private fun PassengerExperienceCard(tripId: String, repository: RideNovaReposito
 }
 
 @Composable
-private fun PassengerRatingDialog(initialStars: Int, initialComment: String, onDismiss: () -> Unit,
+private fun PassengerRatingDialog(initialStars: Int,initialComment: String,busy: Boolean=false,error: String?=null,onDismiss: () -> Unit,
                                   onSubmit: (Int, List<String>, String) -> Unit) {
     var stars by remember { mutableStateOf(initialStars) }
     var comment by remember { mutableStateOf(initialComment) }
     var selected by remember { mutableStateOf(setOf<String>()) }
     val tags = listOf("SAFE_DRIVING" to "Safe driving", "FRIENDLY" to "Friendly", "CLEAN_VEHICLE" to "Clean vehicle", "ON_TIME" to "On time")
-    AlertDialog(onDismissRequest = onDismiss, title = { Text("Rate your driver") }, text = {
+    AlertDialog(onDismissRequest={if(!busy)onDismiss()}, title = { Text("Rate your driver") }, text = {
         Column(Modifier.verticalScroll(rememberScrollState()).imePadding(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
                 (1..5).forEach { value -> IconButton(onClick = { stars = value }) {
@@ -2939,16 +2945,17 @@ private fun PassengerRatingDialog(initialStars: Int, initialComment: String, onD
                 selected = if (key in selected) selected - key else selected + key
             }, label = { Text(label) }, leadingIcon = if (key in selected) {{ Icon(Icons.Default.Check, null) }} else null) }
             OutlinedTextField(comment, { comment = it.take(500) }, Modifier.fillMaxWidth(), label = { Text("Comment (optional)") }, minLines = 3)
+            error?.let { Text(it,color=MaterialTheme.colorScheme.error) }
         }
-    }, confirmButton = { Button(onClick = { onSubmit(stars, selected.toList(), comment) }) { Text("Save rating") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } })
+    }, confirmButton = { Button(enabled=!busy,onClick = { onSubmit(stars, selected.toList(), comment) }) { Text(if(busy) "Saving…" else "Save rating") } },
+        dismissButton = { TextButton(onClick=onDismiss,enabled=!busy) { Text("Cancel") } })
 }
 
 @Composable
-private fun PassengerSupportDialog(onDismiss: () -> Unit, onSubmit: (String, String) -> Unit) {
+private fun PassengerSupportDialog(busy: Boolean=false,error: String?=null,onDismiss: () -> Unit, onSubmit: (String, String) -> Unit) {
     var category by remember { mutableStateOf("LOST_ITEM") }
     var description by remember { mutableStateOf("") }
-    AlertDialog(onDismissRequest = onDismiss, title = { Text("Trip support") }, text = {
+    AlertDialog(onDismissRequest={if(!busy)onDismiss()}, title = { Text("Trip support") }, text = {
         Column(Modifier.verticalScroll(rememberScrollState()).imePadding(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text("Choose the closest issue", color = MaterialTheme.colorScheme.onSurfaceVariant)
             listOf("LOST_ITEM" to "Lost item", "FARE" to "Fare or receipt", "SAFETY" to "Safety", "DRIVER" to "Driver concern", "APP" to "App issue").forEach { (key, label) ->
@@ -2956,9 +2963,10 @@ private fun PassengerSupportDialog(onDismiss: () -> Unit, onSubmit: (String, Str
             }
             OutlinedTextField(description, { description = it.take(1000) }, Modifier.fillMaxWidth(), label = { Text("Tell us what happened") }, minLines = 4,
                 supportingText = { Text("${description.trim().length}/1000 · at least 10 characters") })
+            error?.let { Text(it,color=MaterialTheme.colorScheme.error) }
         }
-    }, confirmButton = { Button(enabled = description.trim().length >= 10, onClick = { onSubmit(category, description.trim()) }) { Text("Submit case") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } })
+    }, confirmButton = { Button(enabled=!busy && description.trim().length>=10, onClick = { onSubmit(category, description.trim()) }) { Text(if(busy) "Sending…" else "Submit case") } },
+        dismissButton = { TextButton(onClick=onDismiss,enabled=!busy) { Text("Cancel") } })
 }
 
 @Composable
@@ -2979,14 +2987,14 @@ private fun AccountScreen(nav: NavHostController, themeMode: RideNovaThemeMode, 
                     Icon(Icons.Default.Person, null, modifier = Modifier.size(34.dp))
                 }
                 Spacer(Modifier.width(14.dp))
-                Column {
+                Column(Modifier.weight(1f)) {
                     Text(riderProfile?.displayName?.takeIf { it.isNotBlank() } ?: "RideNova Rider", fontWeight = FontWeight.Bold, fontSize = 21.sp)
                     Text(riderProfile?.email?.takeIf { it.isNotBlank() } ?: riderProfile?.phone?.takeIf { it.isNotBlank() } ?: "Passenger profile", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
             Spacer(Modifier.height(26.dp))
             AccountMenuRow(Icons.Default.ManageAccounts, "Profile", "Name, verified phone and email") { onEditProfile() }
-            AccountMenuRow(Icons.Default.CreditCard, stringResource(R.string.payment), "Cards & digital wallets") { nav.navigate(Routes.PAYMENT) }
+            AccountMenuRow(Icons.Default.CreditCard, stringResource(R.string.payment), "Payment methods and test cards") { nav.navigate(Routes.PAYMENT) }
             AccountMenuRow(Icons.Default.Place, stringResource(R.string.saved_places), "Home, work and favourites") { nav.navigate(Routes.SAVED_PLACES) }
             AccountMenuRow(Icons.Default.Security, stringResource(R.string.safety), "PIN, sharing and support") { nav.navigate(Routes.SAFETY) }
             AccountMenuRow(Icons.Default.Language, stringResource(R.string.language), "English · Français · Español") { nav.navigate(Routes.LANGUAGE) }
@@ -3006,8 +3014,8 @@ private fun AccountScreen(nav: NavHostController, themeMode: RideNovaThemeMode, 
                     Icon(if (backendConfigured) Icons.Default.CloudDone else Icons.Default.CloudOff, null, tint = if (backendConfigured) NovaSuccess else MaterialTheme.colorScheme.onSurfaceVariant)
                     Spacer(Modifier.width(10.dp))
                     Column {
-                        Text(if (backendConfigured) "RideNova server connected" else "Development mode", fontWeight = FontWeight.SemiBold, fontSize = 12.sp)
-                        Text(if (backendConfigured) "Authenticated passenger account · tokens refresh securely" else "Local ride engine · offline prototype profile", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 10.sp)
+                        Text(if (backendConfigured) "RideNova account" else "Development mode", fontWeight = FontWeight.SemiBold, fontSize = 12.sp)
+                        Text(if (backendConfigured) "Your trips and profile are linked to this account" else "Local ride engine · offline prototype profile", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
                     }
                 }
             }
@@ -3028,7 +3036,7 @@ private fun AccountMenuRow(
     onClick: () -> Unit
 ) {
     Row(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).clickable(onClick = onClick).padding(vertical = 13.dp, horizontal = 6.dp),
+        Modifier.fillMaxWidth().padding(vertical=4.dp).clip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.surface).clickable(onClick=onClick).padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(icon, null, tint = NovaBlue)
@@ -3121,7 +3129,7 @@ private fun PaymentMethodsScreen(
                 Text("Use display details only. RideNova does not ask for or store a real card number or CVV in this development build.", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     listOf("Visa", "Mastercard", "Amex").forEach { option ->
-                        FilterChip(selected = brand == option, onClick = { brand = option }, label = { Text(option, fontSize = 11.sp) })
+                        FilterChip(selected = brand == option, onClick = { brand = option }, label = { Text(option, fontSize = 12.sp) })
                     }
                 }
                 OutlinedTextField(last4, { last4 = it.filter(Char::isDigit).take(4) }, label = { Text("Last 4 display digits") }, singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
@@ -3149,6 +3157,7 @@ private fun PaymentMethodsScreen(
             errorMessage?.let { Spacer(Modifier.height(10.dp)); Text(it, color = MaterialTheme.colorScheme.error, fontSize = 12.sp) }
             if (busy) { Spacer(Modifier.height(12.dp)); LinearProgressIndicator(Modifier.fillMaxWidth()) }
             Spacer(Modifier.height(16.dp))
+            if(methods.isEmpty()) { NovaNotice("No payment method yet",if(staging) "Add a test card below. Complete Stripe checkout, then return here to verify it." else "Add a development reference to test a booking.");Spacer(Modifier.height(12.dp)) }
             methods.forEach { method ->
                 val highlight by animateColorAsState(
                     targetValue = if (method.isDefault) MaterialTheme.colorScheme.primary.copy(alpha = .08f)
@@ -3170,8 +3179,8 @@ private fun PaymentMethodsScreen(
                         Spacer(Modifier.width(12.dp))
                         Column(Modifier.weight(1f)) {
                             Text(method.displayLabel, fontWeight = FontWeight.SemiBold)
-                            Text("Expires ${method.expiryMonth.toString().padStart(2, '0')}/${method.expiryYear} · ${if (method.developmentOnly) "Display reference" else "Stripe test card"}", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 11.sp)
-                            if (method.isDefault) Text("Selected for rides", color = MaterialTheme.colorScheme.primary, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                            Text("Expires ${method.expiryMonth.toString().padStart(2, '0')}/${method.expiryYear} · ${if (method.developmentOnly) "Display reference" else "Stripe test card"}", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
+                            if (method.isDefault) Text("Selected for rides", color = MaterialTheme.colorScheme.primary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                         }
                         if (method.isDefault) Icon(Icons.Default.CheckCircle, "Selected for rides", tint = MaterialTheme.colorScheme.primary)
                         if (methods.size > 1) IconButton(onClick = { onRemove(method.id) }, enabled = !busy) { Icon(Icons.Default.DeleteOutline, "Remove") }
@@ -3190,7 +3199,7 @@ private fun PaymentMethodsScreen(
             }
             if (staging) {
                 Button(onClick = onStartTestSetup, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp), enabled = !busy && methods.size < 5) { Text("Add Stripe test card") }
-                if (pendingTestSetup) TextButton(onClick = onVerifyTestSetup, enabled = !busy) { Text("Verify test card after checkout") }
+                if(pendingTestSetup) { Spacer(Modifier.height(12.dp));NovaNotice("Finish adding your test card","Complete the Stripe page, return here, then tap Verify. A cancelled checkout does not add a card.");OutlinedButton(onClick=onVerifyTestSetup,modifier=Modifier.fillMaxWidth().heightIn(min=52.dp),enabled=!busy) { Text("Verify test card") } }
             } else Button(onClick = { showAdd = true }, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp), enabled = backendMode && !busy && methods.size < 5, shape = RoundedCornerShape(16.dp)) {
                 Icon(Icons.Default.AddCard, null); Spacer(Modifier.width(8.dp)); Text("Add development card")
             }
@@ -3198,7 +3207,7 @@ private fun PaymentMethodsScreen(
             Surface(shape = RoundedCornerShape(16.dp), color = NovaBlue.copy(alpha = .10f)) {
                 Row(Modifier.fillMaxWidth().padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.Security, null, tint = NovaBlue); Spacer(Modifier.width(10.dp))
-                    Text("Stripe test checkout collects test card details. RideNova stores only provider references and display details; no raw card numbers or CVV.", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("Stripe test checkout collects test card details. RideNova stores only provider references and display details; no raw card numbers or CVV.", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         }
@@ -3371,7 +3380,7 @@ private fun navigateTopLevel(nav: NavHostController, route: String) {
 
 @Composable
 private fun BottomBar(nav: NavHostController, selectedRoute: String) {
-    NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
+    NavigationBar(containerColor=MaterialTheme.colorScheme.surface,tonalElevation=0.dp) {
         NavigationBarItem(
             selected = selectedRoute == Routes.HOME,
             onClick = { navigateTopLevel(nav, Routes.HOME) },
@@ -3394,6 +3403,9 @@ private fun BottomBar(nav: NavHostController, selectedRoute: String) {
 }
 
 @Composable
-private fun PrimaryButton(text: String, onClick: () -> Unit, enabled: Boolean = true) {
-    Button(onClick, enabled = enabled, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp), shape = RoundedCornerShape(18.dp), colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)) { Text(text, fontWeight = FontWeight.Bold, fontSize = 16.sp) }
+private fun PrimaryButton(text: String,onClick: () -> Unit,enabled: Boolean=true,busy: Boolean=false) {
+    Button(onClick,enabled=enabled && !busy,modifier=Modifier.fillMaxWidth().heightIn(min=56.dp),shape=RoundedCornerShape(18.dp)) {
+        if(busy) { CircularProgressIndicator(Modifier.size(18.dp),strokeWidth=2.dp);Spacer(Modifier.width(10.dp)) }
+        Text(text,style=MaterialTheme.typography.titleMedium)
+    }
 }

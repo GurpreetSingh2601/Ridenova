@@ -1,7 +1,9 @@
 {
   "private": true,
-  "description": "RideNova Build 42 dependency-free Admin source checks",
+  "description": "RideNova Build 42.1 Admin source and browser regression checks",
   "scripts": {
-    "test": "node admin-source-test.cjs"
-  }
+    "test": "node admin-source-test.cjs",
+    "test:browser": "node admin-browser-test.cjs"
+  },
+  "devDependencies": {"playwright": "1.51.1"}
 }
