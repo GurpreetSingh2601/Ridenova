@@ -1,0 +1,165 @@
+Picked up JAVA_TOOL_OPTIONS: -Djava.net.preferIPv4Stack=true -Djavax.net.ssl.trustStore=/etc/ssl/certs/java/cacerts -Dhttps.proxyHost=127.0.0.1 -Dhttps.proxyPort=33065 -Dhttp.proxyHost=127.0.0.1 -Dhttp.proxyPort=33065
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.6.0/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+> Task :app:clean
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :app:generateDebugBuildConfig
+> Task :app:generateDebugResources
+> Task :app:packageDebugResources
+> Task :app:processDebugNavigationResources
+> Task :app:parseDebugLocalResources
+> Task :app:generateDebugRFile
+
+> Task :app:compileDebugKotlin
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Passenger/app/src/main/java/com/ridenova/passenger/data/BackendRideNovaRepository.kt:65:84 Condition is always 'true'.
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Passenger/app/src/main/java/com/ridenova/passenger/ui/MapExperience.kt:344:40 Unnecessary safe call on a non-null receiver of type 'PlaceSuggestion'.
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Passenger/app/src/main/java/com/ridenova/passenger/ui/MapExperience.kt:345:42 Unnecessary safe call on a non-null receiver of type 'PlaceSuggestion'.
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Passenger/app/src/main/java/com/ridenova/passenger/ui/PickupEditor43.kt:121:59 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:1153:76 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:1172:76 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:1193:86 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:1436:76 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:1796:44 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:1964:147 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:2013:166 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:2253:91 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:2751:86 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:2761:36 'val Icons.Filled.ReceiptLong: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ReceiptLong.
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:3094:42 'val Icons.Filled.Help: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.Help.
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:3108:36 'val Icons.Filled.Logout: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.Logout.
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:3150:86 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:3236:136 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:3332:86 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:3363:86 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:3416:86 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:3477:41 'val Icons.Filled.ReceiptLong: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ReceiptLong.
+
+> Task :app:javaPreCompileDebug UP-TO-DATE
+
+> Task :app:compileDebugJavaWithJavac
+Picked up JAVA_TOOL_OPTIONS: -Djava.net.preferIPv4Stack=true -Djavax.net.ssl.trustStore=/etc/ssl/certs/java/cacerts -Dhttps.proxyHost=127.0.0.1 -Dhttps.proxyPort=33065 -Dhttp.proxyHost=127.0.0.1 -Dhttp.proxyPort=33065
+
+Picked up JAVA_TOOL_OPTIONS: -Djava.net.preferIPv4Stack=true -Djavax.net.ssl.trustStore=/etc/ssl/certs/java/cacerts -Dhttps.proxyHost=127.0.0.1 -Dhttps.proxyPort=33065 -Dhttp.proxyHost=127.0.0.1 -Dhttp.proxyPort=33065
+
+Picked up JAVA_TOOL_OPTIONS: -Djava.net.preferIPv4Stack=true -Djavax.net.ssl.trustStore=/etc/ssl/certs/java/cacerts -Dhttps.proxyHost=127.0.0.1 -Dhttps.proxyPort=33065 -Dhttp.proxyHost=127.0.0.1 -Dhttp.proxyPort=33065
+
+
+> Task :app:compileDebugJavaWithJavac UP-TO-DATE
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :app:mergeDebugAssets UP-TO-DATE
+> Task :app:compressDebugAssets UP-TO-DATE
+> Task :app:generateDebugGlobalSynthetics UP-TO-DATE
+> Task :app:processDebugJavaRes UP-TO-DATE
+> Task :app:mergeDebugJavaResource UP-TO-DATE
+> Task :app:checkDebugDuplicateClasses UP-TO-DATE
+> Task :app:desugarDebugFileDependencies UP-TO-DATE
+> Task :app:mergeExtDexDebug
+> Task :app:mergeExtDexDebug UP-TO-DATE
+> Task :app:mergeLibDexDebug UP-TO-DATE
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+> Task :app:mapDebugSourceSetPaths UP-TO-DATE
+> Task :app:compileDebugNavigationResources UP-TO-DATE
+> Task :app:mergeDebugResources UP-TO-DATE
+> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+> Task :app:processDebugMainManifest UP-TO-DATE
+> Task :app:processDebugManifest UP-TO-DATE
+> Task :app:processDebugManifestForPackage UP-TO-DATE
+> Task :app:processDebugResources UP-TO-DATE
+> Task :app:dexBuilderDebug
+> Task :app:mergeProjectDexDebug
+> Task :app:mergeDebugJniLibFolders UP-TO-DATE
+> Task :app:mergeDebugNativeLibs UP-TO-DATE
+> Task :app:stripDebugDebugSymbols UP-TO-DATE
+> Task :app:validateSigningDebug
+> Task :app:writeDebugAppMetadata UP-TO-DATE
+> Task :app:writeDebugSigningConfigVersions UP-TO-DATE
+> Task :app:packageDebug
+> Task :app:createDebugApkListingFileRedirect
+> Task :app:assembleDebug
+> Task :app:preStagingBuild
+> Task :app:mergeStagingJniLibFolders UP-TO-DATE
+> Task :app:mergeStagingNativeLibs UP-TO-DATE
+> Task :app:stripStagingDebugSymbols UP-TO-DATE
+> Task :app:extractStagingNativeSymbolTables UP-TO-DATE
+> Task :app:mergeStagingNativeDebugMetadata NO-SOURCE
+> Task :app:checkStagingDuplicateClasses UP-TO-DATE
+> Task :app:generateStagingBuildConfig UP-TO-DATE
+> Task :app:generateStagingResources UP-TO-DATE
+> Task :app:packageStagingResources UP-TO-DATE
+> Task :app:processStagingNavigationResources UP-TO-DATE
+> Task :app:parseStagingLocalResources UP-TO-DATE
+> Task :app:generateStagingRFile UP-TO-DATE
+
+> Task :app:compileStagingKotlin
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Passenger/app/src/main/java/com/ridenova/passenger/data/BackendRideNovaRepository.kt:65:84 Condition is always 'true'.
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Passenger/app/src/main/java/com/ridenova/passenger/ui/MapExperience.kt:344:40 Unnecessary safe call on a non-null receiver of type 'PlaceSuggestion'.
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Passenger/app/src/main/java/com/ridenova/passenger/ui/MapExperience.kt:345:42 Unnecessary safe call on a non-null receiver of type 'PlaceSuggestion'.
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Passenger/app/src/main/java/com/ridenova/passenger/ui/PickupEditor43.kt:121:59 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:1153:76 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:1172:76 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:1193:86 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:1436:76 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:1796:44 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:1964:147 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:2013:166 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:2253:91 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:2753:86 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:2763:36 'val Icons.Filled.ReceiptLong: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ReceiptLong.
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:3098:42 'val Icons.Filled.Help: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.Help.
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:3112:36 'val Icons.Filled.Logout: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.Logout.
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:3154:86 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:3240:136 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:3336:86 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:3367:86 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:3420:86 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:3481:41 'val Icons.Filled.ReceiptLong: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ReceiptLong.
+
+> Task :app:javaPreCompileStaging
+> Task :app:compileStagingJavaWithJavac
+> Task :app:checkStagingAarMetadata
+> Task :app:mapStagingSourceSetPaths
+> Task :app:compileStagingNavigationResources
+> Task :app:mergeStagingResources
+> Task :app:createStagingCompatibleScreenManifests
+> Task :app:extractDeepLinksStaging
+> Task :app:processStagingMainManifest
+> Task :app:processStagingManifest
+> Task :app:processStagingManifestForPackage
+> Task :app:processStagingResources
+> Task :app:dexBuilderStaging
+> Task :app:desugarStagingFileDependencies
+> Task :app:mergeStagingStartupProfile
+> Task :app:mergeExtDexStaging
+> Task :app:mergeDexStaging
+> Task :app:mergeStagingArtProfile
+> Task :app:mergeStagingGlobalSynthetics
+> Task :app:compileStagingArtProfile
+> Task :app:generateStagingAssets UP-TO-DATE
+> Task :app:mergeStagingAssets
+> Task :app:compressStagingAssets
+> Task :app:extractStagingVersionControlInfo
+> Task :app:extractProguardFiles
+> Task :app:generateStagingLintVitalReportModel
+> Task :app:lintVitalAnalyzeStaging
+> Task :app:lintVitalReportStaging
+> Task :app:lintVitalStaging
+> Task :app:processStagingJavaRes
+> Task :app:mergeStagingJavaResource
+> Task :app:optimizeStagingResources
+> Task :app:collectStagingDependencies
+> Task :app:sdkStagingDependencyData
+> Task :app:validateSigningStaging
+> Task :app:writeStagingAppMetadata
+> Task :app:writeStagingSigningConfigVersions
+> Task :app:packageStaging
+> Task :app:createStagingApkListingFileRedirect
+> Task :app:assembleStaging
+
+[Incubating] Problems report is available at: file:///workspace/scratch/6b898b26fe2d/RN43/Passenger/build/reports/problems/problems-report.html
+
+BUILD SUCCESSFUL in 6m 35s
+90 actionable tasks: 53 executed, 37 up-to-date
+Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.6.0/userguide/configuration_cache_enabling.html

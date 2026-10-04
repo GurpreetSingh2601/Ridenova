@@ -429,6 +429,11 @@ class DriverViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
+    fun finishNoShow() {
+        _uiState.update { it.copy(rideStage = RideStage.IDLE, activeRide = null, routeProgress = 0f, connectionError = null) }
+        restartRemotePolling()
+    }
+
     fun dismissCompleted() {
         if (_uiState.value.rideStage != RideStage.COMPLETED) return
         _uiState.update { it.copy(rideStage = RideStage.IDLE, activeRide = null, routeProgress = 0f) }

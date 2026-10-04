@@ -4,7 +4,6 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.runtime.saveable.rememberSaveable
 import kotlinx.coroutines.async
 import android.content.Context
 import android.content.Intent
@@ -21,6 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -124,7 +124,7 @@ fun RideNovaDriverApp(locationGranted: Boolean, viewModel: DriverViewModel = vie
                             onClick = { selectedTab = tab; selectedTrip = null; documents = false; access = false; scope.launch { drawer.close() } })
                     }
                     HorizontalDivider(Modifier.padding(20.dp))
-                    Text("Build 42.1 · ${BuildConfig.RIDENOVA_ENVIRONMENT}", Modifier.padding(24.dp), style = MaterialTheme.typography.bodySmall)
+                    Text("Build 43 · ${BuildConfig.RIDENOVA_ENVIRONMENT}", Modifier.padding(24.dp), style = MaterialTheme.typography.bodySmall)
                 }
             }
         }) {
@@ -184,7 +184,8 @@ private fun DriverHomeScreen(state: DriverUiState, viewModel: DriverViewModel, o
     else DriverMapLayout(state) {
         if (state.activeRide != null && state.rideStage in setOf(RideStage.ACCEPTED, RideStage.ARRIVING, RideStage.ARRIVED, RideStage.ON_TRIP)) {
             ActiveRideCard(state, state.activeRide, viewModel::markArrived, viewModel::startTrip,
-                viewModel::completeTrip, { onInAppNavigate() }, { showSafety = true }, { confirmCancel = true })
+                viewModel::completeTrip, { onInAppNavigate() }, { showSafety = true }, { confirmCancel = true },
+                onNoShowComplete = viewModel::finishNoShow)
         } else Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)) {
             state.connectionError?.let { DriverNotice("Connection needs attention", it, true) }
@@ -530,6 +531,7 @@ private fun ActiveRideCard(
     onNavigate: (LatLng) -> Unit,
     onSafety: () -> Unit,
     onCancel: () -> Unit,
+    onNoShowComplete: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     var enteredPin by remember(ride.id) { mutableStateOf("") }
@@ -544,6 +546,8 @@ private fun ActiveRideCard(
             verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text(title,style=MaterialTheme.typography.titleLarge,fontWeight=FontWeight.Bold,modifier=Modifier.semantics { liveRegion=LiveRegionMode.Polite })
             Text(destinationText, style = MaterialTheme.typography.bodyLarge)
+            if (ride.pickupNotes.isNotBlank()) NovaNotice("Pickup instructions", ride.pickupNotes)
+            if (state.rideStage == RideStage.ARRIVED && state.remoteMode) WaitingCard43(ride.id, onNoShowComplete)
             state.connectionError?.let { DriverNotice("Trip update failed", it, true) }
             if (state.resumedRide) DriverNotice("Trip restored", "Continue with your current trip.")
             LinearProgressIndicator(progress = { state.routeProgress.coerceIn(0f, 1f) }, modifier = Modifier.fillMaxWidth())
@@ -624,7 +628,7 @@ private fun CompletedRideCard(ride: RideRequest, remoteMode: Boolean, onDone: ()
             Text("Estimated driver earnings")
             Text(money(ride.driverEstimatedEarningsCad), fontSize = 34.sp, fontWeight = FontWeight.Bold)
             Text("Trip fare ${money(ride.fareCad)} · no real payout")
-            if (remoteMode) DriverExperienceActions(ride.id)
+            if (remoteMode) DriverExperienceActions(ride.id, inlineRating = true)
             Button(onClick=onDone,modifier=Modifier.fillMaxWidth().heightIn(min=52.dp)) { Text("Back to driver home") }
         }
     }
@@ -806,9 +810,15 @@ private fun DriverTripDetailScreen(trip: CompletedTrip, onBack: () -> Unit) {
 }
 
 @Composable
-private fun DriverExperienceActions(rideId: String) {
+private fun DriverExperienceActions(rideId: String, inlineRating: Boolean = false) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    var stars by rememberSaveable(rideId) { mutableIntStateOf(0) }
+    var savedStars by remember(rideId) { mutableIntStateOf(0) }
+    var ratingLoaded by remember(rideId) { mutableStateOf(false) }
+    var retryLoad by remember { mutableIntStateOf(0) }
+    val ratingPrefs = remember { context.getSharedPreferences("rating_prompts", android.content.Context.MODE_PRIVATE) }
+    var skipped by rememberSaveable(rideId) { mutableStateOf(ratingPrefs.getBoolean(rideId, false)) }
     var ratingOpen by remember { mutableStateOf(false) }
     var supportOpen by remember { mutableStateOf(false) }
     var busy by remember { mutableStateOf(false) }
@@ -817,10 +827,38 @@ private fun DriverExperienceActions(rideId: String) {
     val token = remember { com.ridenova.driver.data.FleetCredentials(context).load() }
     val api = remember(token) { com.ridenova.driver.data.DriverHttpApi(BuildConfig.RIDENOVA_DEV_URL, token, true) }
     if (token.isBlank()) return
+    LaunchedEffect(rideId, retryLoad) {
+        if (inlineRating) runCatching { api.json("GET", "v2/fleet/driver/rides/$rideId/experience") }
+            .onSuccess { savedStars = it.optJSONObject("rating")?.optInt("stars", 0) ?: 0; ratingLoaded = true; error = null }
+            .onFailure { error = "Could not check rating. Retry before submitting." }
+    }
     Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
+        if (inlineRating && !skipped && savedStars == 0) {
+            Text("How was your rider?", style = MaterialTheme.typography.titleMedium)
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                (1..5).forEach { value -> IconButton(enabled = !busy && ratingLoaded, onClick = { stars = value }) {
+                    Icon(if (value <= stars) Icons.Default.Star else Icons.Default.StarBorder, "$value stars", tint = Color(0xFFFFB000))
+                } }
+            }
+            if (!ratingLoaded) TextButton(onClick = { retryLoad++ }) { Text("Retry rating check") }
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Button(enabled = stars in 1..5 && ratingLoaded && !busy, onClick = {
+                    scope.launch {
+                        busy = true; error = null
+                        runCatching { api.json("POST", "v2/fleet/driver/rides/$rideId/rating", org.json.JSONObject()
+                            .put("stars", stars).put("tags", org.json.JSONArray()).put("comment", "")) }
+                            .onSuccess { savedStars = stars; confirmation = "Rider rating saved" }
+                            .onFailure { error = it.localizedMessage ?: "Rating not saved. Your selection is kept; try again." }
+                        busy = false
+                    }
+                }) { Text(if (busy) "Saving…" else "Submit rating") }
+                TextButton(enabled = !busy, onClick = { skipped = true; ratingPrefs.edit().putBoolean(rideId, true).apply() }) { Text("Skip") }
+            }
+        }
+        if (inlineRating && savedStars > 0) Text("You rated this rider $savedStars / 5")
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             OutlinedButton(onClick = { ratingOpen = true }, enabled = !busy, modifier = Modifier.weight(1f)) {
-                Icon(Icons.Default.Star, null, Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)); Text("Rate rider")
+                Icon(Icons.Default.Star, null, Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)); Text(if (inlineRating) "Rating / feedback" else "Rate rider")
             }
             OutlinedButton(onClick = { supportOpen = true }, enabled = !busy, modifier = Modifier.weight(1f)) {
                 Icon(Icons.Default.Shield, null, Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)); Text("Support")
@@ -835,7 +873,7 @@ private fun DriverExperienceActions(rideId: String) {
             runCatching {
                 api.json("POST", "v2/fleet/driver/rides/$rideId/rating", org.json.JSONObject()
                     .put("stars", stars).put("tags", org.json.JSONArray(tags)).put("comment", comment))
-            }.onSuccess { confirmation = "Rider rating saved"; ratingOpen = false }
+            }.onSuccess { confirmation = "Rider rating saved"; savedStars = stars; ratingOpen = false }
                 .onFailure { error = it.localizedMessage ?: "Could not save rating" }
             busy = false
         }
@@ -855,7 +893,7 @@ private fun DriverExperienceActions(rideId: String) {
 
 @Composable
 private fun DriverRatingDialog(busy: Boolean=false,error: String?=null,onDismiss: () -> Unit, onSubmit: (Int, List<String>, String) -> Unit) {
-    var stars by remember { mutableStateOf(5) }
+    var stars by remember { mutableStateOf(0) }
     var comment by remember { mutableStateOf("") }
     var selected by remember { mutableStateOf(setOf<String>()) }
     val tags = listOf("RESPECTFUL" to "Respectful", "CLEAR_COMMUNICATION" to "Clear communication", "EASY_PICKUP" to "Easy pickup")
@@ -872,7 +910,7 @@ private fun DriverRatingDialog(busy: Boolean=false,error: String?=null,onDismiss
             OutlinedTextField(comment, { comment = it.take(500) }, Modifier.fillMaxWidth(), label = { Text("Private feedback (optional)") }, minLines = 3)
             error?.let { Text(it,color=MaterialTheme.colorScheme.error) }
         }
-    }, confirmButton = { Button(enabled=!busy,onClick = { onSubmit(stars, selected.toList(), comment.trim()) }) { Text(if(busy) "Saving…" else "Save rating") } },
+    }, confirmButton = { Button(enabled=!busy && stars in 1..5,onClick = { onSubmit(stars, selected.toList(), comment.trim()) }) { Text(if(busy) "Saving…" else "Save rating") } },
         dismissButton = { TextButton(onClick=onDismiss,enabled=!busy) { Text("Cancel") } })
 }
 

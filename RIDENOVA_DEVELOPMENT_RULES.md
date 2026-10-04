@@ -1,6 +1,6 @@
 # RideNova development rules
 
-Updated for Build 42.1 UI/UX on 2026-10-03 UTC. Preserve this file in every later build.
+Updated for Build 43 pickup and trip reliability on 2026-10-03 UTC. Preserve this file in every later build.
 
 ## Architecture
 
@@ -26,7 +26,7 @@ Updated for Build 42.1 UI/UX on 2026-10-03 UTC. Preserve this file in every late
 
 ## Required testing
 
-- Run `python VERIFY_BUILD_42.py`.
+- Run `python VERIFY_BUILD_43.py`.
 - Require PostgreSQL concurrency, import and restore tests in `verification/postgres-integration.py`; SQLite and SQL syntax tests are not substitutes.
 - Require matching API/worker revision and fresh heartbeat at `/ready` before inviting staging testers.
 - Run all backend regression tests and add a targeted test for every regression.
@@ -39,8 +39,8 @@ Updated for Build 42.1 UI/UX on 2026-10-03 UTC. Preserve this file in every late
 
 ## Known current boundaries
 
-- The CLI is development-only. Gunicorn/WSGI and invitation restrictions serve controlled staging. The user has a Build 42 Render setup; this Build 42.1 revision has not been deployed or provider-verified by this work.
-- Build 42.1 passed 12 disposable PostgreSQL tests and both Android debug/staging compilations here. Device, hosted performance and real-provider acceptance remain distinct gates.
+- The CLI is development-only. Gunicorn/WSGI and invitation restrictions serve controlled staging. The user has a Build 42 Render setup; this Build 43 revision has not been deployed or provider-verified by this work.
+- Actual Build 43 execution results are recorded in TEST_RESULTS_BUILD_43.md. Device, hosted performance and real-provider acceptance remain distinct gates.
 - Staging has conservative global request serialization/rate caps. Build 42 batches rate checks and logs phase timings; do not remove the request gate until atomic dispatch has independent guarantees.
 - Managed backups, monitoring notifications and CI/CD account configuration require authorized setup and verification.
 - OTP delivery, payouts and identity/document verification remain simulations. Stripe test payments are implemented behind test-key configuration; no live charge path is enabled.
@@ -52,7 +52,7 @@ Updated for Build 42.1 UI/UX on 2026-10-03 UTC. Preserve this file in every late
 
 - Build 41: authorized Render staging, PostgreSQL migration, secrets, backups/restore, monitoring, CI/CD and rollback, portable toward AWS. Never incur charges without owner authorization.
 - Build 42: Stripe test sandbox, idempotent finance, refund/payout accounting design and capped boost-rule foundation.
-- Build 43: trip sharing, emergency improvements and capped platform-funded boost zones. Avoid aggressive passenger surge pricing initially.
+- Build 43 approved revised scope: seven pickup/rating/recovery/status fixes plus the waiting/no-show flow. Original Share Trip, emergency improvements and Driver boost-zone map remain pending; schedule after dependency review. Keep bonuses platform-funded and capped. Do not silently increase an accepted passenger fare.
 - Builds 44–47: BC compliance, scheduled rides/stops, communication/support, navigation/UX/performance.
 - Builds 48–50: security/full regression, controlled BC beta and v1.0 candidate. Never claim public-launch approval without verification.
 
@@ -63,7 +63,7 @@ Updated for Build 42.1 UI/UX on 2026-10-03 UTC. Preserve this file in every late
 - Every monetary operation uses fixed idempotency keys, server-owned integer CAD cents, provider verification and unique ledger entries. Reconcile an ambiguous result before a different attempt.
 - A boost is funded by the platform, capped by an atomic reservation, recorded once per ride and does not change the accepted passenger price.
 
-## Build 42.1 UI maintenance rules
+## Continuing UI maintenance rules
 
 - Reuse each app's canonical launcher vector for brand marks; keep the existing Canadian tagline.
 - Share typography, spacing, corners and semantic colours across screens. Do not equate styling with implementation of a service.
@@ -71,4 +71,8 @@ Updated for Build 42.1 UI/UX on 2026-10-03 UTC. Preserve this file in every late
 - Keep offer actions reachable independently of scrolling details. Respect large text and small/landscape screens.
 - Keep Admin refreshes scoped to the visible workspace, with loading/error/freshness state. Abort/reject obsolete session requests and clear data on logout/401.
 - Run the Admin browser regression after UI/request-lifecycle changes, in addition to server RBAC tests. Screenshots must label synthetic fixtures as such.
-- Preserve Build 42 migration checksums. Build 42.1 adds no schema change; API `revision` remains the Git commit while `releaseRevision` identifies this release.
+- Preserve Build 42 migration checksums. Build 43 adds no schema change; API `revision` remains the Git commit while `releaseRevision` identifies this release.
+
+## Build 43 invariants
+
+Manual pickup is a user decision; asynchronous GPS must not overwrite it. Quote-bound instructions, route and fare stay consistent. Never persist reusable quotes in the booking draft. No-show needs a transaction, correct assigned driver, verified five-minute wait, fresh nearby GPS and an explicit reason/check. It records zero fee and no earning/boost. Retries must be idempotent. No contact attempt is invented. New trip states require coordinated app/API compatibility. Keep current limitations and actual executed checks in the release documents.

@@ -1,0 +1,139 @@
+Picked up JAVA_TOOL_OPTIONS: -Djava.net.preferIPv4Stack=true -Djavax.net.ssl.trustStore=/etc/ssl/certs/java/cacerts -Dhttps.proxyHost=127.0.0.1 -Dhttps.proxyPort=33065 -Dhttp.proxyHost=127.0.0.1 -Dhttp.proxyPort=33065
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.6.0/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+
+> Configure project :app
+RideNova Driver: MAPS_API_KEY is missing. Add MAPS_API_KEY=... to gradle.properties or local.properties.
+
+> Task :app:clean
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :app:generateDebugBuildConfig
+> Task :app:generateDebugResources
+> Task :app:packageDebugResources
+> Task :app:processDebugNavigationResources
+> Task :app:parseDebugLocalResources
+> Task :app:generateDebugRFile
+> Task :app:compileDebugKotlin
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Driver/app/src/main/java/com/ridenova/driver/ui/DriverApp.kt:119:68 'val Icons.Filled.ReceiptLong: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ReceiptLong.
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Driver/app/src/main/java/com/ridenova/driver/ui/DriverApp.kt:143:157 'val Icons.Filled.ReceiptLong: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ReceiptLong.
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Driver/app/src/main/java/com/ridenova/driver/ui/DriverApp.kt:792:36 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Driver/app/src/main/java/com/ridenova/driver/ui/DriverApp.kt:960:45 'val Icons.Filled.Logout: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.Logout.
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Driver/app/src/main/java/com/ridenova/driver/ui/DriverApp.kt:961:34 'val Icons.Filled.ReceiptLong: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ReceiptLong.
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Driver/app/src/main/java/com/ridenova/driver/ui/DriverViewModel.kt:172:63 Unnecessary safe call on a non-null receiver of type 'RideRequest'.
+
+> Task :app:javaPreCompileDebug UP-TO-DATE
+
+> Task :app:compileDebugJavaWithJavac
+Picked up JAVA_TOOL_OPTIONS: -Djava.net.preferIPv4Stack=true -Djavax.net.ssl.trustStore=/etc/ssl/certs/java/cacerts -Dhttps.proxyHost=127.0.0.1 -Dhttps.proxyPort=33065 -Dhttp.proxyHost=127.0.0.1 -Dhttp.proxyPort=33065
+
+Picked up JAVA_TOOL_OPTIONS: -Djava.net.preferIPv4Stack=true -Djavax.net.ssl.trustStore=/etc/ssl/certs/java/cacerts -Dhttps.proxyHost=127.0.0.1 -Dhttps.proxyPort=33065 -Dhttp.proxyHost=127.0.0.1 -Dhttp.proxyPort=33065
+
+Picked up JAVA_TOOL_OPTIONS: -Djava.net.preferIPv4Stack=true -Djavax.net.ssl.trustStore=/etc/ssl/certs/java/cacerts -Dhttps.proxyHost=127.0.0.1 -Dhttps.proxyPort=33065 -Dhttp.proxyHost=127.0.0.1 -Dhttp.proxyPort=33065
+
+
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :app:mergeDebugAssets UP-TO-DATE
+> Task :app:compressDebugAssets UP-TO-DATE
+> Task :app:generateDebugGlobalSynthetics
+> Task :app:processDebugJavaRes
+> Task :app:mergeDebugJavaResource
+> Task :app:checkDebugDuplicateClasses UP-TO-DATE
+> Task :app:desugarDebugFileDependencies UP-TO-DATE
+> Task :app:mergeExtDexDebug
+> Task :app:mergeLibDexDebug UP-TO-DATE
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+> Task :app:mapDebugSourceSetPaths UP-TO-DATE
+> Task :app:compileDebugNavigationResources UP-TO-DATE
+> Task :app:mergeDebugResources
+> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksDebug
+> Task :app:processDebugMainManifest
+> Task :app:processDebugManifest
+> Task :app:processDebugManifestForPackage
+> Task :app:processDebugResources
+> Task :app:dexBuilderDebug
+> Task :app:mergeProjectDexDebug
+> Task :app:mergeDebugJniLibFolders UP-TO-DATE
+> Task :app:mergeDebugNativeLibs
+
+> Task :app:stripDebugDebugSymbols
+Unable to strip the following libraries, packaging them as they are: libandroidx.graphics.path.so. Run with --info option to learn more.
+
+> Task :app:validateSigningDebug UP-TO-DATE
+> Task :app:writeDebugAppMetadata UP-TO-DATE
+> Task :app:writeDebugSigningConfigVersions
+> Task :app:packageDebug
+> Task :app:createDebugApkListingFileRedirect UP-TO-DATE
+> Task :app:assembleDebug
+> Task :app:preStagingBuild
+> Task :app:mergeStagingJniLibFolders UP-TO-DATE
+> Task :app:mergeStagingNativeLibs
+
+> Task :app:stripStagingDebugSymbols
+Unable to strip the following libraries, packaging them as they are: libandroidx.graphics.path.so. Run with --info option to learn more.
+
+> Task :app:extractStagingNativeSymbolTables UP-TO-DATE
+> Task :app:mergeStagingNativeDebugMetadata NO-SOURCE
+> Task :app:checkStagingDuplicateClasses UP-TO-DATE
+> Task :app:generateStagingBuildConfig
+> Task :app:generateStagingResources
+> Task :app:packageStagingResources
+> Task :app:processStagingNavigationResources UP-TO-DATE
+> Task :app:parseStagingLocalResources
+> Task :app:generateStagingRFile
+
+> Task :app:compileStagingKotlin
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Driver/app/src/main/java/com/ridenova/driver/ui/DriverApp.kt:119:68 'val Icons.Filled.ReceiptLong: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ReceiptLong.
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Driver/app/src/main/java/com/ridenova/driver/ui/DriverApp.kt:143:157 'val Icons.Filled.ReceiptLong: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ReceiptLong.
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Driver/app/src/main/java/com/ridenova/driver/ui/DriverApp.kt:792:36 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Driver/app/src/main/java/com/ridenova/driver/ui/DriverApp.kt:960:45 'val Icons.Filled.Logout: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.Logout.
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Driver/app/src/main/java/com/ridenova/driver/ui/DriverApp.kt:961:34 'val Icons.Filled.ReceiptLong: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ReceiptLong.
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Driver/app/src/main/java/com/ridenova/driver/ui/DriverViewModel.kt:172:63 Unnecessary safe call on a non-null receiver of type 'RideRequest'.
+
+> Task :app:javaPreCompileStaging UP-TO-DATE
+> Task :app:compileStagingJavaWithJavac
+> Task :app:checkStagingAarMetadata UP-TO-DATE
+> Task :app:mapStagingSourceSetPaths UP-TO-DATE
+> Task :app:compileStagingNavigationResources UP-TO-DATE
+> Task :app:mergeStagingResources
+> Task :app:createStagingCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksStaging
+> Task :app:processStagingMainManifest
+> Task :app:processStagingManifest
+> Task :app:processStagingManifestForPackage
+> Task :app:processStagingResources
+> Task :app:dexBuilderStaging
+> Task :app:desugarStagingFileDependencies UP-TO-DATE
+> Task :app:mergeStagingStartupProfile UP-TO-DATE
+> Task :app:mergeExtDexStaging
+> Task :app:mergeDexStaging
+> Task :app:mergeStagingArtProfile
+> Task :app:mergeStagingGlobalSynthetics UP-TO-DATE
+> Task :app:compileStagingArtProfile
+> Task :app:generateStagingAssets UP-TO-DATE
+> Task :app:mergeStagingAssets UP-TO-DATE
+> Task :app:compressStagingAssets UP-TO-DATE
+> Task :app:extractStagingVersionControlInfo
+> Task :app:extractProguardFiles UP-TO-DATE
+> Task :app:generateStagingLintVitalReportModel
+> Task :app:lintVitalAnalyzeStaging
+> Task :app:lintVitalReportStaging
+> Task :app:lintVitalStaging
+> Task :app:processStagingJavaRes
+> Task :app:mergeStagingJavaResource
+> Task :app:optimizeStagingResources
+> Task :app:collectStagingDependencies
+> Task :app:sdkStagingDependencyData
+> Task :app:validateSigningStaging UP-TO-DATE
+> Task :app:writeStagingAppMetadata UP-TO-DATE
+> Task :app:writeStagingSigningConfigVersions
+> Task :app:packageStaging
+> Task :app:createStagingApkListingFileRedirect UP-TO-DATE
+> Task :app:assembleStaging
+w: Detected multiple Kotlin daemon sessions at 
+
+BUILD SUCCESSFUL in 6m 45s
+90 actionable tasks: 58 executed, 32 up-to-date
+Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.6.0/userguide/configuration_cache_enabling.html

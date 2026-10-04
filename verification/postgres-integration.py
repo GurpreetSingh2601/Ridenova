@@ -17,6 +17,7 @@ sys.path.insert(0, str(ROOT / 'Passenger/backend'))
 import psycopg
 from psycopg import sql
 import test_build35 as legacy
+import test_build43 as build43
 from database import request_lock
 from migrate import apply, check
 from server import Service
@@ -106,6 +107,20 @@ class PostgresDispatchTests(legacy.Build35Tests):
         self.now += 61000
         self.fleet.presence(driver, {'online': True, 'latitude': 49.28, 'longitude': -123.12})
         self.assertEqual(self.fleet.offer(driver), {})
+
+
+class PostgresBuild43Tests(build43.Build43Tests):
+    setUp = PostgresDispatchTests.setUp
+    def tearDown(self): pass
+    def test_retry_concurrency_and_restart_do_not_duplicate_cancellation_or_earnings(self):
+        driver, ride = self.ready(); self.elapsed(driver)
+        self.cancel(driver, ride)
+        reopened = Service(DATABASE, clock=lambda: self.now)
+        reopened.fleet.action(driver, ride, 'no-show', {})
+        with reopened.connect() as db:
+            self.assertEqual(db.execute("SELECT COUNT(*) FROM events WHERE ride_id=? AND type='FLEET_NO_SHOW'", (ride,)).fetchone()[0], 1)
+            self.assertEqual(db.execute('SELECT COUNT(*) FROM development_earnings WHERE ride_id=?', (ride,)).fetchone()[0], 0)
+        self.assertEqual(reopened.get('p', ride)['status'], 'CANCELLED_NO_SHOW')
 
 
 class PostgresMigrationTests(unittest.TestCase):

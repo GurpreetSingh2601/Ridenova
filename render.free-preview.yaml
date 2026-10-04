@@ -1,4 +1,4 @@
-# RideNova Build 42: FREE, DISPOSABLE staging preview only.
+# RideNova Build 43: FREE, DISPOSABLE staging preview only.
 # Copy this file to RN42/render.yaml BEFORE creating a NEW Blueprint.
 # It creates one free web service and one free PostgreSQL database.
 # Never sync this over an existing paid RideNova Blueprint: removing its worker
@@ -6,7 +6,7 @@
 # Free PostgreSQL expires after 30 days. Use synthetic test data only.
 # No background worker is available for free; /ready remains 503, and scheduled
 # dispatch, offer expiry and unattended recovery are not reliable in this preview.
-# Do not call this configuration a completed Build 42 deployment.
+# Do not call this configuration a completed Build 43 deployment.
 services:
   - type: web
     name: ridenova-free-trial-api

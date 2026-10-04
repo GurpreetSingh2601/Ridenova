@@ -1,0 +1,127 @@
+Picked up JAVA_TOOL_OPTIONS: -Djava.net.preferIPv4Stack=true -Djavax.net.ssl.trustStore=/etc/ssl/certs/java/cacerts -Dhttps.proxyHost=127.0.0.1 -Dhttps.proxyPort=34311 -Dhttp.proxyHost=127.0.0.1 -Dhttp.proxyPort=34311
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.6.0/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :app:generateDebugBuildConfig UP-TO-DATE
+> Task :app:generateDebugResources UP-TO-DATE
+> Task :app:packageDebugResources UP-TO-DATE
+> Task :app:processDebugNavigationResources UP-TO-DATE
+> Task :app:parseDebugLocalResources UP-TO-DATE
+> Task :app:generateDebugRFile UP-TO-DATE
+
+> Task :app:compileDebugKotlin
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:1153:76 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:1172:76 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:1193:86 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:1436:76 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:1796:44 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:1964:147 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:2013:166 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:2253:91 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:2753:86 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:2763:36 'val Icons.Filled.ReceiptLong: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ReceiptLong.
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:3098:42 'val Icons.Filled.Help: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.Help.
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:3112:36 'val Icons.Filled.Logout: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.Logout.
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:3154:86 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:3240:136 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:3336:86 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:3367:86 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:3420:86 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RN43/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:3481:41 'val Icons.Filled.ReceiptLong: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ReceiptLong.
+
+> Task :app:javaPreCompileDebug UP-TO-DATE
+> Task :app:compileDebugJavaWithJavac UP-TO-DATE
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :app:mergeDebugAssets UP-TO-DATE
+> Task :app:compressDebugAssets UP-TO-DATE
+> Task :app:generateDebugGlobalSynthetics UP-TO-DATE
+> Task :app:processDebugJavaRes UP-TO-DATE
+> Task :app:mergeDebugJavaResource UP-TO-DATE
+> Task :app:checkDebugDuplicateClasses UP-TO-DATE
+> Task :app:desugarDebugFileDependencies UP-TO-DATE
+> Task :app:mergeExtDexDebug UP-TO-DATE
+> Task :app:mergeLibDexDebug UP-TO-DATE
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+> Task :app:mapDebugSourceSetPaths UP-TO-DATE
+> Task :app:compileDebugNavigationResources UP-TO-DATE
+> Task :app:mergeDebugResources UP-TO-DATE
+> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+> Task :app:processDebugMainManifest UP-TO-DATE
+> Task :app:processDebugManifest UP-TO-DATE
+> Task :app:processDebugManifestForPackage UP-TO-DATE
+> Task :app:processDebugResources UP-TO-DATE
+> Task :app:dexBuilderDebug
+> Task :app:mergeProjectDexDebug
+> Task :app:mergeDebugJniLibFolders UP-TO-DATE
+> Task :app:mergeDebugNativeLibs UP-TO-DATE
+> Task :app:stripDebugDebugSymbols UP-TO-DATE
+> Task :app:validateSigningDebug UP-TO-DATE
+> Task :app:writeDebugAppMetadata UP-TO-DATE
+> Task :app:writeDebugSigningConfigVersions UP-TO-DATE
+> Task :app:packageDebug
+> Task :app:createDebugApkListingFileRedirect UP-TO-DATE
+> Task :app:assembleDebug
+> Task :app:preStagingBuild
+> Task :app:mergeStagingJniLibFolders UP-TO-DATE
+> Task :app:mergeStagingNativeLibs UP-TO-DATE
+> Task :app:stripStagingDebugSymbols UP-TO-DATE
+> Task :app:extractStagingNativeSymbolTables UP-TO-DATE
+> Task :app:mergeStagingNativeDebugMetadata NO-SOURCE
+> Task :app:checkStagingDuplicateClasses UP-TO-DATE
+> Task :app:generateStagingBuildConfig UP-TO-DATE
+> Task :app:generateStagingResources UP-TO-DATE
+> Task :app:packageStagingResources UP-TO-DATE
+> Task :app:processStagingNavigationResources UP-TO-DATE
+> Task :app:parseStagingLocalResources UP-TO-DATE
+> Task :app:generateStagingRFile UP-TO-DATE
+> Task :app:compileStagingKotlin UP-TO-DATE
+> Task :app:javaPreCompileStaging UP-TO-DATE
+> Task :app:compileStagingJavaWithJavac UP-TO-DATE
+> Task :app:checkStagingAarMetadata UP-TO-DATE
+> Task :app:mapStagingSourceSetPaths UP-TO-DATE
+> Task :app:compileStagingNavigationResources UP-TO-DATE
+> Task :app:mergeStagingResources UP-TO-DATE
+> Task :app:createStagingCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksStaging UP-TO-DATE
+> Task :app:processStagingMainManifest UP-TO-DATE
+> Task :app:processStagingManifest UP-TO-DATE
+> Task :app:processStagingManifestForPackage UP-TO-DATE
+> Task :app:processStagingResources UP-TO-DATE
+> Task :app:dexBuilderStaging UP-TO-DATE
+> Task :app:desugarStagingFileDependencies UP-TO-DATE
+> Task :app:mergeStagingStartupProfile UP-TO-DATE
+> Task :app:mergeExtDexStaging UP-TO-DATE
+> Task :app:mergeDexStaging UP-TO-DATE
+> Task :app:mergeStagingArtProfile UP-TO-DATE
+> Task :app:mergeStagingGlobalSynthetics UP-TO-DATE
+> Task :app:compileStagingArtProfile UP-TO-DATE
+> Task :app:generateStagingAssets UP-TO-DATE
+> Task :app:mergeStagingAssets UP-TO-DATE
+> Task :app:compressStagingAssets UP-TO-DATE
+> Task :app:extractStagingVersionControlInfo UP-TO-DATE
+> Task :app:extractProguardFiles UP-TO-DATE
+> Task :app:generateStagingLintVitalReportModel UP-TO-DATE
+> Task :app:lintVitalAnalyzeStaging UP-TO-DATE
+> Task :app:lintVitalReportStaging UP-TO-DATE
+> Task :app:lintVitalStaging
+> Task :app:processStagingJavaRes UP-TO-DATE
+> Task :app:mergeStagingJavaResource UP-TO-DATE
+> Task :app:optimizeStagingResources UP-TO-DATE
+> Task :app:collectStagingDependencies UP-TO-DATE
+> Task :app:sdkStagingDependencyData UP-TO-DATE
+> Task :app:validateSigningStaging UP-TO-DATE
+> Task :app:writeStagingAppMetadata UP-TO-DATE
+> Task :app:writeStagingSigningConfigVersions UP-TO-DATE
+> Task :app:packageStaging UP-TO-DATE
+> Task :app:createStagingApkListingFileRedirect UP-TO-DATE
+> Task :app:assembleStaging UP-TO-DATE
+w: Detected multiple Kotlin daemon sessions at 
+
+[Incubating] Problems report is available at: file:///workspace/scratch/6b898b26fe2d/RN43/Passenger/build/reports/problems/problems-report.html
+
+BUILD SUCCESSFUL in 45s
+89 actionable tasks: 6 executed, 83 up-to-date
+Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.6.0/userguide/configuration_cache_enabling.html

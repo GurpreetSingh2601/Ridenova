@@ -30,6 +30,8 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -91,6 +93,7 @@ internal fun RideNovaMap(
     compact: Boolean = false,
     bottomContentPadding: Dp = 0.dp,
     animateRoute: Boolean = false,
+    onLocationIssue: (String) -> Unit = {},
     onLocationResolved: (LatLng, String?) -> Unit = { _, _ -> }
 ) {
     if (!googleMapsConfigured()) {
@@ -101,6 +104,9 @@ internal fun RideNovaMap(
     val context = LocalContext.current
     val darkTheme = LocalRideNovaDarkTheme.current
     val coroutineScope = rememberCoroutineScope()
+    val latestLocationResolved by rememberUpdatedState(onLocationResolved)
+    val latestLocationIssue by rememberUpdatedState(onLocationIssue)
+    var locationRequest by remember { mutableIntStateOf(0) }
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
     var hasLocationPermission by remember {
         mutableStateOf(
@@ -115,6 +121,7 @@ internal fun RideNovaMap(
     ) { result ->
         hasLocationPermission = result[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
             result[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+        if (!hasLocationPermission) latestLocationIssue("Location permission is off. Choose your pickup manually.")
     }
 
     val defaultCenter = LatLng(49.1913, -122.8490)
@@ -133,11 +140,11 @@ internal fun RideNovaMap(
         reverseGeocode(
             context = context,
             point = resolved,
-            onResolved = { address -> onLocationResolved(resolved, address) },
+            onResolved = { address -> latestLocationResolved(resolved, address) },
             onLegacyLookup = {
                 coroutineScope.launch {
                     val address = withContext(Dispatchers.IO) { legacyReverseGeocode(context, resolved) }
-                    onLocationResolved(resolved, address)
+                    latestLocationResolved(resolved, address)
                 }
             }
         )
@@ -148,16 +155,25 @@ internal fun RideNovaMap(
             permissionLauncher.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
             return
         }
+        val request = ++locationRequest
+        coroutineScope.launch { kotlinx.coroutines.delay(15_000); if (request == locationRequest) { locationRequest++; latestLocationIssue("GPS timed out. Choose a pickup address or map pin.") } }
         try {
             fusedLocationClient
                 .getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, null)
                 .addOnSuccessListener { location ->
-                    if (location != null) {
+                    if (request != locationRequest) return@addOnSuccessListener
+                    locationRequest++
+                    if (location != null && location.hasAccuracy() && location.accuracy <= 100f &&
+                        android.os.SystemClock.elapsedRealtimeNanos() - location.elapsedRealtimeNanos in 0..60_000_000_000L) {
                         publishLocation(LatLng(location.latitude, location.longitude))
-                    }
+                    } else latestLocationIssue("GPS is unavailable or imprecise. Choose the pickup yourself.")
+                }.addOnFailureListener {
+                    if (request == locationRequest) { locationRequest++; latestLocationIssue("Could not get GPS. Choose your pickup manually.") }
                 }
         } catch (_: SecurityException) {
             hasLocationPermission = false
+            locationRequest++
+            latestLocationIssue("Location permission is off. Choose your pickup manually.")
         }
     }
 

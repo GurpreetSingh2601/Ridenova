@@ -1,0 +1,20 @@
+test_duplicate_booking_and_completion_survive_new_service (__main__.PostgresDispatchTests.test_duplicate_booking_and_completion_survive_new_service) ... ok
+test_history_uses_exact_pickup_address_and_route_points (__main__.PostgresDispatchTests.test_history_uses_exact_pickup_address_and_route_points) ... ok
+test_independent_process_acceptance (__main__.PostgresDispatchTests.test_independent_process_acceptance) ... Applied 001_build40_baseline.sql
+Applied 002_staging_operations.sql
+Applied 003_build42_finance_boost.sql
+ok
+test_shared_radar_first_atomic_claim_wins (__main__.PostgresDispatchTests.test_shared_radar_first_atomic_claim_wins) ... ok
+test_signup_cannot_self_assign_xl_and_admin_controls_categories (__main__.PostgresDispatchTests.test_signup_cannot_self_assign_xl_and_admin_controls_categories) ... ok
+test_stale_location_and_explicit_decline (__main__.PostgresDispatchTests.test_stale_location_and_explicit_decline) ... ok
+test_unclaimed_radar_falls_back_to_exclusive_offer (__main__.PostgresDispatchTests.test_unclaimed_radar_falls_back_to_exclusive_offer) ... ok
+test_backup_restore_checksum_and_refusal (__main__.PostgresMigrationTests.test_backup_restore_checksum_and_refusal) ... ok
+test_build42_finance_and_boost_persist_across_services (__main__.PostgresMigrationTests.test_build42_finance_and_boost_persist_across_services) ... ok
+test_import_preserves_data_and_refuses_occupied_target (__main__.PostgresMigrationTests.test_import_preserves_data_and_refuses_occupied_target) ... ok
+test_migrations_reapply_without_changes (__main__.PostgresMigrationTests.test_migrations_reapply_without_changes) ... ok
+test_payment_methods_load_and_keep_added_order (__main__.PostgresMigrationTests.test_payment_methods_load_and_keep_added_order) ... ok
+
+----------------------------------------------------------------------
+Ran 12 tests in 2.781s
+
+OK

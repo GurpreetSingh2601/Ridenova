@@ -13,6 +13,19 @@ import org.json.JSONObject
 class RideNovaLocalStore(context: Context) {
     private val prefs = context.getSharedPreferences("ridenova_local_state", Context.MODE_PRIVATE)
 
+    fun loadBookingDraft(): BookingDraft = runCatching {
+        val raw = prefs.getString("booking_draft_43", null) ?: return BookingDraft()
+        val restored = draftFromJson(JSONObject(raw)).copy(routeEstimate = null)
+        if (restored.scheduledAtEpochMs?.let { !ScheduleTime.isBookable(it, System.currentTimeMillis()) } == true)
+            restored.copy(scheduled = false, scheduleLabel = "Now", scheduledAtEpochMs = null, scheduleTimeZone = null)
+        else restored
+    }.getOrDefault(BookingDraft())
+
+    fun saveBookingDraft(draft: BookingDraft) {
+        // Never persist a quote or stale route. Route and fare are refreshed on review.
+        prefs.edit().putString("booking_draft_43", draftToJson(draft.copy(routeEstimate = null)).toString()).apply()
+    }
+
     fun isOnboardingComplete(): Boolean = prefs.getBoolean(KEY_ONBOARDING_COMPLETE, false)
 
     fun loadProfile(): RiderProfile? {
@@ -93,6 +106,7 @@ class RideNovaLocalStore(context: Context) {
 
     fun clearPassengerData() {
         prefs.edit()
+            .remove("booking_draft_43")
             .remove(KEY_PROFILE)
             .remove(KEY_ONBOARDING_COMPLETE)
             .remove(KEY_TRIPS)
@@ -161,6 +175,8 @@ class RideNovaLocalStore(context: Context) {
 
     private fun draftToJson(draft: BookingDraft): JSONObject = JSONObject().apply {
         put("pickup", placeToJson(draft.pickup))
+        put("pickupManual", draft.pickupManual)
+        put("pickupNotes", draft.pickupNotes)
         draft.destination?.let { put("destination", placeToJson(it)) }
         put("tier", draft.selectedTier.name)
         draft.routeEstimate?.let { put("route", routeToJson(it)) }
@@ -172,6 +188,8 @@ class RideNovaLocalStore(context: Context) {
 
     private fun draftFromJson(json: JSONObject): BookingDraft = BookingDraft(
         pickup = placeFromJson(json.getJSONObject("pickup")),
+        pickupManual = json.optBoolean("pickupManual", false),
+        pickupNotes = json.optString("pickupNotes", ""),
         destination = json.optJSONObject("destination")?.let(::placeFromJson),
         selectedTier = runCatching { RideTier.valueOf(json.optString("tier", RideTier.ECONOMY.name)) }.getOrDefault(RideTier.ECONOMY),
         routeEstimate = json.optJSONObject("route")?.let(::routeFromJson),

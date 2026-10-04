@@ -37,6 +37,7 @@ data class RideRequest(
     val category: String = "Economy",
     val expiresAtEpochMs: Long = 0L,
     val offerMode: String = "EXCLUSIVE",
+    val pickupNotes: String = "",
     val nearbyDriverCount: Int = 1
 )
 

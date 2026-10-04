@@ -12,21 +12,6 @@ backups/
 import-report.json
 .idea/
 
-# Build 42.1 exclusions
-**/__pycache__/
-**/*.pyc
-**/*.sqlite*
-**/*.db
-**/*.dump
-**/.env
-**/.env.*
-**/local.properties
-**/.gradle/
-**/build/
-backups/
-import-report.json
-.idea/
-
 **/node_modules/
 **/.kotlin/
 **/*.jks

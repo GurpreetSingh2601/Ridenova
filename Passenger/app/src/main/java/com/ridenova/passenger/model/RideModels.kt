@@ -21,6 +21,7 @@ enum class TripStatus {
     TRIP_STARTED,
     COMPLETED,
     CANCELLED_BY_RIDER,
+    CANCELLED_NO_SHOW,
     SCHEDULE_EXPIRED
 }
 
@@ -117,7 +118,9 @@ data class BookingDraft(
     val scheduled: Boolean = false,
     val scheduleLabel: String = "Now",
     val scheduledAtEpochMs: Long? = null,
-    val scheduleTimeZone: String? = null
+    val scheduleTimeZone: String? = null,
+    val pickupManual: Boolean = false,
+    val pickupNotes: String = ""
 )
 
 data class DriverProfile(
@@ -143,5 +146,6 @@ data class RideTrip(
     val cancellationFeeAfterGraceCad: Double = 5.0,
     val payment: TripPayment? = null,
     val driverPosition: DriverPosition? = null,
+    val waitingEndsAtEpochMs: Long? = null,
     val liveTrip: LiveTripProgress? = null
 )

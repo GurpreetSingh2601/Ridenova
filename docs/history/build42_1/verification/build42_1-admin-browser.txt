@@ -1,0 +1,3 @@
+PASS: 9 Admin workspaces; Owner + 4 restricted roles; keyboard sign-in and ride details; empty search; failed refresh retains data; duplicate refresh coalescing; 390px navigation and overflow; delayed response after logout; HTTP 401 session clearing.
+Screenshots: verification/ui-evidence/ (synthetic fixtures, not a live backend or production data).
+Browser: 134.0.6998.35. Total fixture requests: 62

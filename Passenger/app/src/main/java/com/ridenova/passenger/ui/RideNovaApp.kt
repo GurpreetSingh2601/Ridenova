@@ -82,6 +82,8 @@ private object Routes {
     const val PROFILE = "profile"
     const val ACCOUNT_PROFILE = "account_profile"
     const val HOME = "home"
+    const val PICKUP = "pickup"
+    const val PICKUP_SEARCH = "pickup_search"
     const val SEARCH = "search"
     const val RIDES = "rides"
     const val SCHEDULE = "schedule"
@@ -127,7 +129,7 @@ fun RideNovaApp(
     }
 
     var riderProfile by remember { mutableStateOf(initialProfile) }
-    var draft by remember { mutableStateOf(BookingDraft()) }
+    var draft by remember { mutableStateOf(localStore.loadBookingDraft()) }
     var trips by remember { mutableStateOf(initialTrips) }
     var recentDestinations by remember { mutableStateOf(initialRecentDestinations) }
     var savedHome by remember { mutableStateOf(initialSavedHome) }
@@ -157,6 +159,8 @@ fun RideNovaApp(
             }?.id
         )
     }
+    var pickupSearchResult by remember { mutableStateOf<PlaceSuggestion?>(null) }
+    LaunchedEffect(draft, signedIn) { if (signedIn) localStore.saveBookingDraft(draft) }
     var completionPrompt by rememberSaveable { mutableStateOf<String?>(null) }
 
     fun rememberDestination(place: PlaceSuggestion) {
@@ -388,8 +392,13 @@ fun RideNovaApp(
                     draft = draft.copy(destination = place, routeEstimate = null, scheduled = false, scheduleLabel = "Now", scheduledAtEpochMs = null, scheduleTimeZone = null)
                     nav.navigate(Routes.RIDES)
                 },
+                pickup = draft.pickup,
+                pickupManual = draft.pickupManual,
+                draftDestination = draft.destination,
+                onResumeDraft = { nav.navigate(Routes.RIDES) },
+                onEditPickup = { pickupSearchResult = null; nav.navigate(Routes.PICKUP) },
                 onPickupResolved = { lat, lng, address ->
-                    draft = draft.copy(
+                    if (!draft.pickupManual) draft = draft.copy(
                         pickup = PlaceSuggestion(
                             name = "Current location",
                             address = address ?: "Current GPS location",
@@ -400,6 +409,24 @@ fun RideNovaApp(
                     )
                 }
             )
+        }
+        composable(Routes.PICKUP) {
+            PickupEditor43(draft, pickupSearchResult,
+                onSearch = { pickupSearchResult = null; nav.navigate(Routes.PICKUP_SEARCH) },
+                onBack = { nav.popBackStack() },
+                onConfirm = { place, manual, notes ->
+                    draft = draft.copy(pickup = place, pickupManual = manual, pickupNotes = notes, routeEstimate = null)
+                    localStore.saveBookingDraft(draft)
+                    pickupSearchResult = null
+                    nav.popBackStack()
+                    if (nav.currentDestination?.route == Routes.CONFIRM) nav.popBackStack()
+                })
+        }
+        composable(Routes.PICKUP_SEARCH) {
+            SearchScreen(recentDestinations = emptyList(), screenTitle = "Search pickup address",
+                searchHint = "Address, building or place", onBack = { nav.popBackStack() },
+                onPlace = { place -> pickupSearchResult = place; nav.popBackStack() },
+                onClearRecent = {}, onRemoveRecent = {})
         }
         composable(Routes.SEARCH) {
             SearchScreen(
@@ -462,6 +489,7 @@ fun RideNovaApp(
                 onSelect = { draft = draft.copy(selectedTier = it) },
                 onRouteSelected = { draft = draft.copy(routeEstimate = it) },
                 onSchedule = { nav.navigate(Routes.SCHEDULE) },
+                onEditPickup = { pickupSearchResult = null; nav.navigate(Routes.PICKUP) },
                 onContinue = { nav.navigate(Routes.CONFIRM) }
             )
         }
@@ -489,6 +517,7 @@ fun RideNovaApp(
                 runCatching {
                     repository.quote(
                         QuoteRequest(
+                            pickupNotes = draft.pickupNotes,
                             pickup = draft.pickup,
                             destination = destination,
                             route = route,
@@ -525,6 +554,7 @@ fun RideNovaApp(
                 paymentMethod = paymentMethods.firstOrNull { it.isDefault } ?: paymentMethods.firstOrNull(),
                 nearbyDriver = nearbyDriver,
                 nearbyDriverChecking = nearbyDriverChecking,
+                onEditPickup = { pickupSearchResult = null; nav.navigate(Routes.PICKUP) },
                 onOpenPayment = { nav.navigate(Routes.PAYMENT) },
                 onBack = { if (!bookingBusy) nav.popBackStack() },
                 onRequest = {
@@ -536,6 +566,7 @@ fun RideNovaApp(
                                 ?: error("Route estimate is unavailable")
                             val quote = reviewedQuote?.takeIf { it.expiresAtEpochMs > System.currentTimeMillis() } ?: repository.quote(
                                 QuoteRequest(
+                            pickupNotes = draft.pickupNotes,
                                     pickup = draft.pickup,
                                     destination = draft.destination ?: error("Destination is missing"),
                                     route = route,
@@ -557,6 +588,8 @@ fun RideNovaApp(
                         }.onSuccess { trip ->
                             trips = listOf(trip) + trips.filterNot { it.id == trip.id }
                             activeTripId = trip.id
+                            draft = BookingDraft(pickup = draft.pickup, pickupManual = draft.pickupManual)
+                            localStore.saveBookingDraft(draft)
                             bookingBusy = false
                             if (trip.status == TripStatus.SCHEDULED) {
                                 nav.navigate(Routes.TRIPS) { popUpTo(Routes.HOME); launchSingleTop = true }
@@ -712,6 +745,7 @@ fun RideNovaApp(
                         signedIn = false; riderProfile = null; trips = emptyList(); activeTripId = null
                         recentDestinations = emptyList(); savedHome = null; savedWork = null
                         paymentMethods = emptyList(); accountDataError = null
+                        draft = BookingDraft()
                         localStore.clearPassengerData()
                         nav.navigate(Routes.WELCOME) { popUpTo(nav.graph.id) { inclusive = true } }
                     }
@@ -1192,16 +1226,22 @@ private fun HomeScreen(
     onSearchDestination: () -> Unit,
     onSavedPlace: (PlaceSuggestion?) -> Unit,
     onRecentDestination: (PlaceSuggestion) -> Unit,
+    pickup: PlaceSuggestion,
+    pickupManual: Boolean,
+    draftDestination: PlaceSuggestion?,
+    onResumeDraft: () -> Unit,
+    onEditPickup: () -> Unit,
     onPickupResolved: (Double, Double, String?) -> Unit
 ) {
     val homeDensity = LocalDensity.current
     var homeCardHeight by remember { mutableStateOf(0.dp) }
+    var locationIssue by remember { mutableStateOf<String?>(null) }
     Scaffold(
         bottomBar = { BottomBar(nav = nav, selectedRoute = Routes.HOME) }
     ) { pad ->
         BoxWithConstraints(Modifier.fillMaxSize().padding(pad)) {
             val cardLimit = maxHeight * 0.68f
-            RideNovaMap(modifier = Modifier.fillMaxSize(), bottomContentPadding = homeCardHeight + 24.dp, onLocationResolved = { point, address -> onPickupResolved(point.latitude, point.longitude, address) })
+            RideNovaMap(modifier = Modifier.fillMaxSize(), bottomContentPadding = homeCardHeight + 24.dp, pickup = pickup, onLocationIssue = { locationIssue = it }, onLocationResolved = { point, address -> locationIssue = null; onPickupResolved(point.latitude, point.longitude, address) })
             Column(Modifier.align(Alignment.TopStart).padding(18.dp)) {
                 Surface(shape=RoundedCornerShape(18.dp),shadowElevation=2.dp) { Row(Modifier.padding(8.dp),verticalAlignment=Alignment.CenterVertically) { NovaMark(36);Spacer(Modifier.width(10.dp));Text("RideNova",style=MaterialTheme.typography.titleMedium);Spacer(Modifier.width(8.dp)) } }
             }
@@ -1211,6 +1251,21 @@ private fun HomeScreen(
             ) {
                 Column(Modifier.heightIn(max = cardLimit).verticalScroll(rememberScrollState()).padding(18.dp)) {
                     Text("LET’S GET YOU THERE",style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
+                    OutlinedButton(onClick = onEditPickup, modifier = Modifier.fillMaxWidth()) {
+                        Icon(Icons.Default.MyLocation, null); Spacer(Modifier.width(8.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text("Pickup · tap to change", style = MaterialTheme.typography.labelMedium)
+                            Text(if (pickup.latitude == null) "Choose a pickup location" else pickup.address.ifBlank { pickup.name }, maxLines = 2)
+                        }
+                        Icon(Icons.Default.Edit, "Edit pickup")
+                    }
+                    if (pickup.latitude == null) Text("GPS unavailable? Enter an address or choose a point on the map.", style = MaterialTheme.typography.bodySmall)
+                    if (pickupManual) Text("Your selected pickup is locked until you change it.", style = MaterialTheme.typography.bodySmall)
+                    else locationIssue?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
+                    if (draftDestination != null && activeTrip?.status !in liveTripStatuses) {
+                        TextButton(onClick = onResumeDraft) { Text("Continue booking to ${draftDestination.name}") }
+                        Text("Draft saved · route and fare will refresh", style = MaterialTheme.typography.bodySmall)
+                    }
                     Text("Where can we take you?", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                     Spacer(Modifier.height(16.dp))
                     Surface(Modifier.fillMaxWidth().clickable(onClick = onSearchDestination), shape = RoundedCornerShape(18.dp), color = MaterialTheme.colorScheme.surfaceVariant) {
@@ -1459,12 +1514,12 @@ private fun SearchScreen(
                 } else {
                     Surface(shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.surfaceVariant) {
                         Column(Modifier.fillMaxWidth().padding(14.dp)) {
-                            Text("Google Places is ready to connect", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-                            Text("Add MAPS_API_KEY to local.properties. Until then these sample BC destinations keep the booking flow testable.", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
+                            Text("Address search unavailable", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                            Text(if (BuildConfig.DEBUG) "Configure Maps and Places to search real addresses. Sample destinations below are for offline testing." else "Address search is not configured. Return to choose a map pin if the map is available, or contact the test coordinator.", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
                         }
                     }
                     Spacer(Modifier.height(12.dp))
-                    demoFiltered.forEach { place ->
+                    (if (BuildConfig.DEBUG) demoFiltered else emptyList()).forEach { place ->
                         Row(Modifier.fillMaxWidth().clickable { onPlace(place) }.padding(vertical = 13.dp), verticalAlignment = Alignment.CenterVertically) {
                             Box(Modifier.size(42.dp).clip(CircleShape).background(MaterialTheme.colorScheme.surfaceVariant), contentAlignment = Alignment.Center) { Icon(Icons.Default.LocationOn, null, tint = NovaBlue) }
                             Spacer(Modifier.width(12.dp))
@@ -1486,6 +1541,7 @@ private fun RideSelectionScreen(
     onSelect: (RideTier) -> Unit,
     onRouteSelected: (RouteEstimate) -> Unit,
     onSchedule: () -> Unit,
+    onEditPickup: () -> Unit,
     onContinue: () -> Unit
 ) {
     val context = LocalContext.current
@@ -1587,6 +1643,10 @@ private fun RideSelectionScreen(
                         }
                     }
 
+                    TextButton(onClick = onEditPickup) {
+                        Icon(Icons.Default.EditLocationAlt, null); Spacer(Modifier.width(6.dp))
+                        Text("Pickup: ${draft.pickup.address.ifBlank { draft.pickup.name }}", maxLines = 2)
+                    }
                     routeChoices?.let { choices ->
                         val routeButtons = buildList {
                             val best = choices.best ?: choices.fastest
@@ -1940,6 +2000,7 @@ private fun ConfirmationScreen(
     paymentMethod: PaymentMethod?,
     nearbyDriver: DriverAvailability?,
     nearbyDriverChecking: Boolean,
+    onEditPickup: () -> Unit,
     onOpenPayment: () -> Unit,
     onBack: () -> Unit,
     onRequest: () -> Unit
@@ -1965,7 +2026,9 @@ private fun ConfirmationScreen(
         }
     ) { pad ->
         Column(Modifier.padding(pad).fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp)) {
-            RouteLine(stringResource(R.string.pickup), draft.pickup.name, NovaSuccess)
+            RouteLine(stringResource(R.string.pickup), draft.pickup.address.ifBlank { draft.pickup.name }, NovaSuccess)
+            TextButton(onClick = onEditPickup, enabled = !busy) { Text("Edit pickup / instructions") }
+            if (draft.pickupNotes.isNotBlank()) Text("Pickup instructions: ${draft.pickupNotes}", style = MaterialTheme.typography.bodyMedium)
             RouteLine(stringResource(R.string.destination), draft.destination?.name ?: "—", NovaBlue)
             routeEstimate?.let { route ->
                 Spacer(Modifier.height(8.dp))
@@ -2245,6 +2308,7 @@ private fun MatchingScreen(
                         TripStatus.DRIVER_ARRIVED -> "Your driver has arrived"
                         TripStatus.TRIP_STARTED -> "You're on your way"
                         TripStatus.COMPLETED -> "Ride completed"
+                        TripStatus.CANCELLED_NO_SHOW -> "Cancelled · rider not picked up"
                         TripStatus.CANCELLED_BY_RIDER -> "Ride cancelled"
                         TripStatus.SCHEDULED -> "Ride scheduled"
                         TripStatus.SCHEDULE_EXPIRED -> "Scheduled pickup missed"
@@ -2295,9 +2359,18 @@ private fun MatchingScreen(
                     }
                 }
 
+                if (trip.draft.pickupNotes.isNotBlank()) Text("Pickup instructions: ${trip.draft.pickupNotes}")
+                if (trip.status == TripStatus.DRIVER_ARRIVED) {
+                    Text("Your driver is waiting at the pickup. Check the meeting point and your ride PIN.")
+                    PickupWaitingMessage43(trip.waitingEndsAtEpochMs)
+                    Text("After a five-minute verified wait, the driver may end pickup as a no-show. No no-show fee is charged in this staging build.", style = MaterialTheme.typography.bodySmall)
+                }
+                if (trip.status == TripStatus.CANCELLED_NO_SHOW) {
+                    Text("The driver could not find the rider after waiting. No fee was charged. You can book again or contact Support from this trip.")
+                }
                 trip.driver?.let { driver ->
                     if (trip.status in setOf(TripStatus.DRIVER_ASSIGNED, TripStatus.DRIVER_ARRIVED, TripStatus.TRIP_STARTED)) {
-                        DriverCard(driver = driver, pin = trip.pin, arrived = trip.status != TripStatus.DRIVER_ASSIGNED)
+                        DriverCard(driver = driver, pin = trip.pin, status = trip.status)
                         Spacer(Modifier.height(14.dp))
                     }
                 }
@@ -2305,7 +2378,9 @@ private fun MatchingScreen(
                 Surface(shape = RoundedCornerShape(20.dp), color = MaterialTheme.colorScheme.surfaceVariant) {
                     Column(Modifier.fillMaxWidth().padding(16.dp)) {
                         SummaryRow("Ride", trip.option.title)
+                        if (trip.status == TripStatus.CANCELLED_NO_SHOW) Text("Original booking estimate · not charged", color = MaterialTheme.colorScheme.onSurfaceVariant)
                         FareRows(trip.option)
+                        if (trip.status == TripStatus.CANCELLED_NO_SHOW) SummaryRow("Amount charged", "$0.00 CAD")
                         trip.payment?.let { SummaryRow("Payment", "${it.methodLabel} · ${paymentStatusLabel(it.status)}") }
                         trip.draft.routeEstimate?.let {
                             SummaryRow("Route", "${"%.1f".format(it.distanceKm)} km · ${it.durationMinutes} min")
@@ -2328,7 +2403,7 @@ private fun MatchingScreen(
                                     if (graceSeconds > 0)
                                         "Free cancellation · ${graceSeconds / 60}:${(graceSeconds % 60).toString().padStart(2, '0')} remaining"
                                     else
-                                        if (backendMode) "$${"%.2f".format(trip.cancellationFeeAfterGraceCad)} development cancellation fee" else "$5.00 cancellation fee now applies",
+                                        if (backendMode) "$${"%.2f".format(trip.cancellationFeeAfterGraceCad)} test cancellation fee" else "$5.00 cancellation fee now applies",
                                     fontWeight = FontWeight.SemiBold
                                 )
                                 Text(if (backendMode) "Server time and policy determine the final fee; no actual charge is made." else "Prototype policy: 2-minute grace period after requesting.", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
@@ -2375,7 +2450,7 @@ private fun MatchingScreen(
                         Spacer(Modifier.height(8.dp))
                         OutlinedButton(onOpenTrips, Modifier.fillMaxWidth()) { Text("View trip history") }
                     }
-                    TripStatus.CANCELLED_BY_RIDER -> {
+                    TripStatus.CANCELLED_NO_SHOW, TripStatus.CANCELLED_BY_RIDER -> {
                         Spacer(Modifier.height(18.dp))
                         if (trip.cancellationFeeCad > 0) {
                             Text("Prototype cancellation fee: $${"%.2f".format(trip.cancellationFeeCad)} CAD", color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -2392,10 +2467,10 @@ private fun MatchingScreen(
                     TripStatus.SEARCHING -> Unit
                 }
 
-                if (trip.status !in setOf(TripStatus.COMPLETED, TripStatus.CANCELLED_BY_RIDER, TripStatus.SCHEDULE_EXPIRED)) {
+                if (trip.status !in setOf(TripStatus.COMPLETED, TripStatus.CANCELLED_BY_RIDER, TripStatus.CANCELLED_NO_SHOW, TripStatus.SCHEDULE_EXPIRED)) {
                     Spacer(Modifier.height(18.dp))
                     Text(
-                        if (backendMode) "Development ride · live driver updates · payments are simulated." else "Offline prototype: driver progress is simulated locally. No real driver is contacted or payment collected.",
+                        if (backendMode) "Staging ride · live driver updates · no live charges. Stripe test authorizations are separate from simulated ride records." else "Offline prototype: driver progress is simulated locally. No real driver is contacted or payment collected.",
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = 12.sp
                     )
@@ -2406,7 +2481,7 @@ private fun MatchingScreen(
 }
 
 @Composable
-private fun DriverCard(driver: DriverProfile, pin: String?, arrived: Boolean) {
+private fun DriverCard(driver: DriverProfile, pin: String?, status: TripStatus) {
     Surface(shape = RoundedCornerShape(22.dp), color = MaterialTheme.colorScheme.surface, shadowElevation = 2.dp) {
         Column(Modifier.fillMaxWidth().padding(18.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -2424,7 +2499,7 @@ private fun DriverCard(driver: DriverProfile, pin: String?, arrived: Boolean) {
                 }
                 Surface(shape = RoundedCornerShape(14.dp), color = MaterialTheme.colorScheme.surfaceVariant) {
                     Text(
-                        if (arrived) "Arrived" else "${driver.pickupEtaMinutes} min",
+                        when (status) { TripStatus.TRIP_STARTED -> "On trip"; TripStatus.DRIVER_ARRIVED -> "Arrived"; else -> "${driver.pickupEtaMinutes} min" },
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 7.dp),
                         fontWeight = FontWeight.Bold
                     )
@@ -2462,7 +2537,7 @@ private fun PrototypeAction(label: String, onClick: () -> Unit) {
 }
 
 private val liveTripStatuses = setOf(TripStatus.SEARCHING, TripStatus.DRIVER_ASSIGNED, TripStatus.DRIVER_ARRIVED, TripStatus.TRIP_STARTED)
-private val pastTripStatuses = setOf(TripStatus.COMPLETED, TripStatus.CANCELLED_BY_RIDER, TripStatus.SCHEDULE_EXPIRED)
+private val pastTripStatuses = setOf(TripStatus.COMPLETED, TripStatus.CANCELLED_BY_RIDER, TripStatus.CANCELLED_NO_SHOW, TripStatus.SCHEDULE_EXPIRED)
 
 private fun tripStatusLabel(status: TripStatus): String = when (status) {
     TripStatus.SCHEDULED -> "Scheduled"
@@ -2471,12 +2546,14 @@ private fun tripStatusLabel(status: TripStatus): String = when (status) {
     TripStatus.DRIVER_ARRIVED -> "Driver arrived"
     TripStatus.TRIP_STARTED -> "In progress"
     TripStatus.COMPLETED -> "Completed"
+    TripStatus.CANCELLED_NO_SHOW -> "Cancelled · rider not picked up"
     TripStatus.CANCELLED_BY_RIDER -> "Cancelled"
     TripStatus.SCHEDULE_EXPIRED -> "Pickup missed · no charge"
 }
 
 private fun tripEventLabel(status: TripStatus): String = when (status) {
     TripStatus.COMPLETED -> "Completed"
+    TripStatus.CANCELLED_NO_SHOW -> "Cancelled · rider not picked up"
     TripStatus.CANCELLED_BY_RIDER -> "Cancelled"
     TripStatus.SCHEDULE_EXPIRED -> "Pickup missed"
     else -> "Last updated"
@@ -2499,7 +2576,7 @@ private fun TripsScreen(
     val active = trips.filter { it.status in setOf(TripStatus.SEARCHING, TripStatus.DRIVER_ASSIGNED, TripStatus.DRIVER_ARRIVED, TripStatus.TRIP_STARTED) }
     val scheduled = trips.filter { it.status == TripStatus.SCHEDULED }.sortedBy { it.draft.scheduledAtEpochMs ?: Long.MAX_VALUE }
     var recentFilter by rememberSaveable { mutableStateOf("All") }
-    val recent = trips.filter { it.status in setOf(TripStatus.COMPLETED, TripStatus.CANCELLED_BY_RIDER, TripStatus.SCHEDULE_EXPIRED) }
+    val recent = trips.filter { it.status in setOf(TripStatus.COMPLETED, TripStatus.CANCELLED_BY_RIDER, TripStatus.CANCELLED_NO_SHOW, TripStatus.SCHEDULE_EXPIRED) }
         .sortedByDescending { it.updatedAtEpochMs }
     var cancelTarget by remember { mutableStateOf<RideTrip?>(null) }
     var cancelBusy by remember { mutableStateOf(false) }
@@ -2549,7 +2626,7 @@ private fun TripsScreen(
                         trip = trip,
                         onClick = { onOpenTrip(trip.id) },
                         footer = {
-                            Text(if (backendMode) "Matching starts at pickup time while the development server is running. No real driver is reserved." else "Offline prototype: matching starts manually using the demo button.", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(if (backendMode) "Matching starts at pickup time while the shared backend and scheduler are running. No driver is reserved in advance." else "Offline prototype: matching starts manually using the demo button.", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             OutlinedButton(onClick = { cancelTarget = trip; cancelError = null }, modifier = Modifier.fillMaxWidth()) { Text("Cancel scheduled ride") }
                             if (!backendMode) OutlinedButton(
                                 onClick = { onStartScheduled(trip.id) },
@@ -2593,7 +2670,7 @@ private fun TripCard(
                     Icon(
                         when (trip.status) {
                             TripStatus.COMPLETED -> Icons.Default.CheckCircle
-                            TripStatus.CANCELLED_BY_RIDER -> Icons.Default.Cancel
+                            TripStatus.CANCELLED_BY_RIDER, TripStatus.CANCELLED_NO_SHOW -> Icons.Default.Cancel
                             TripStatus.SCHEDULE_EXPIRED -> Icons.Default.EventBusy
                             TripStatus.SCHEDULED -> Icons.Default.Event
                             else -> Icons.Default.DirectionsCar
@@ -2601,7 +2678,7 @@ private fun TripCard(
                         null,
                         tint = when (trip.status) {
                             TripStatus.COMPLETED -> NovaSuccess
-                            TripStatus.CANCELLED_BY_RIDER -> MaterialTheme.colorScheme.error
+                            TripStatus.CANCELLED_BY_RIDER, TripStatus.CANCELLED_NO_SHOW -> MaterialTheme.colorScheme.error
                             TripStatus.SCHEDULE_EXPIRED -> MaterialTheme.colorScheme.onSurfaceVariant
                             else -> NovaBlue
                         }
@@ -2617,7 +2694,7 @@ private fun TripCard(
                     )
                     Text(
                         if (trip.status == TripStatus.SCHEDULED) "Booked ${tripDateTime(trip.requestedAtEpochMs)}"
-                        else if (trip.status in setOf(TripStatus.COMPLETED, TripStatus.CANCELLED_BY_RIDER, TripStatus.SCHEDULE_EXPIRED))
+                        else if (trip.status in setOf(TripStatus.COMPLETED, TripStatus.CANCELLED_BY_RIDER, TripStatus.CANCELLED_NO_SHOW, TripStatus.SCHEDULE_EXPIRED))
                             "${tripEventLabel(trip.status)} ${tripDateTime(trip.updatedAtEpochMs)}"
                         else "Requested ${tripDateTime(trip.requestedAtEpochMs)}",
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -2782,11 +2859,13 @@ private fun TripDetailScreen(
                     Column(Modifier.fillMaxWidth().padding(17.dp)) {
                         SummaryRow("Ride", trip.option.title)
                         SummaryRow("Status", tripStatusLabel(trip.status))
-                        if (trip.status in setOf(TripStatus.COMPLETED, TripStatus.CANCELLED_BY_RIDER, TripStatus.SCHEDULE_EXPIRED)) {
+                        if (trip.status in setOf(TripStatus.COMPLETED, TripStatus.CANCELLED_BY_RIDER, TripStatus.CANCELLED_NO_SHOW, TripStatus.SCHEDULE_EXPIRED)) {
                             Text("${tripEventLabel(trip.status)} at", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
                             Text(tripDateTime(trip.updatedAtEpochMs), fontWeight = FontWeight.SemiBold)
                         }
+                        if (trip.status == TripStatus.CANCELLED_NO_SHOW) Text("Original booking estimate · not charged", color = MaterialTheme.colorScheme.onSurfaceVariant)
                         FareRows(trip.option)
+                        if (trip.status == TripStatus.CANCELLED_NO_SHOW) SummaryRow("Amount charged", "$0.00 CAD")
                         trip.payment?.let { payment ->
                             SummaryRow("Payment method", payment.methodLabel)
                             SummaryRow("Payment status", paymentStatusLabel(payment.status))
@@ -2795,7 +2874,7 @@ private fun TripDetailScreen(
                             Text("Scheduled pickup", color = MaterialTheme.colorScheme.onSurfaceVariant)
                             Text(trip.draft.scheduleLabel, fontWeight = FontWeight.SemiBold)
                         }
-                        if (trip.status == TripStatus.SCHEDULE_EXPIRED) Text("The development server could not start this pickup within 15 minutes. No fee was recorded. Book a new ride when ready.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        if (trip.status == TripStatus.SCHEDULE_EXPIRED) Text("No driver was assigned within the scheduled pickup window. No fee was recorded. Book a new ride when ready.", color = MaterialTheme.colorScheme.onSurfaceVariant)
                         trip.draft.routeEstimate?.let {
                             SummaryRow("Distance", "${"%.1f".format(it.distanceKm)} km")
                             SummaryRow("Estimated time", "${it.durationMinutes} min")
@@ -2806,6 +2885,15 @@ private fun TripDetailScreen(
                     }
                 }
 
+                if (trip.draft.pickupNotes.isNotBlank()) Text("Pickup instructions: ${trip.draft.pickupNotes}")
+                if (trip.status == TripStatus.DRIVER_ARRIVED) {
+                    Text("Your driver is waiting at the pickup. Check the meeting point and your ride PIN.")
+                    PickupWaitingMessage43(trip.waitingEndsAtEpochMs)
+                    Text("After a five-minute verified wait, the driver may end pickup as a no-show. No no-show fee is charged in this staging build.", style = MaterialTheme.typography.bodySmall)
+                }
+                if (trip.status == TripStatus.CANCELLED_NO_SHOW) {
+                    Text("The driver could not find the rider after waiting. No fee was charged. You can book again or contact Support from this trip.")
+                }
                 trip.driver?.let { driver ->
                     Surface(shape = RoundedCornerShape(22.dp), color = MaterialTheme.colorScheme.surfaceVariant) {
                         Row(Modifier.fillMaxWidth().padding(17.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -2844,7 +2932,7 @@ private fun TripDetailScreen(
 
                 if (isLive) {
                     PrimaryButton("Open live ride", onOpenLiveRide)
-                } else if (trip.status in setOf(TripStatus.COMPLETED, TripStatus.CANCELLED_BY_RIDER, TripStatus.SCHEDULE_EXPIRED)) {
+                } else if (trip.status in setOf(TripStatus.COMPLETED, TripStatus.CANCELLED_BY_RIDER, TripStatus.CANCELLED_NO_SHOW, TripStatus.SCHEDULE_EXPIRED)) {
                     PrimaryButton("Ride again", { onRideAgain(trip) })
                     Text(
                         "Uses this destination and ride category. Your current GPS location becomes the new pickup.",

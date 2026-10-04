@@ -1,3 +1,7 @@
+# Build 43 — 2026-10-03
+
+Editable pickup and manual GPS lock; location fallbacks; quote-bound pickup notes; immediate optional driver stars; recoverable booking drafts; status/payment wording; server-backed zero-fee waiting/no-show with Passenger/Admin integration. No schema migration or account reset. Roadmap scope adjustment is explicit in current release notes.
+
 # RideNova change log
 
 ## Build 42.1 UI and UX — 2026-10-03 UTC

@@ -16,6 +16,7 @@ interface RideNovaApiContract {
 
 data class QuoteRequest(
     val pickup: PlaceSuggestion,
+    val pickupNotes: String = "",
     val destination: PlaceSuggestion,
     val route: RouteEstimate,
     val scheduled: Boolean,

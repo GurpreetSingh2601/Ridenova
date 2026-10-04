@@ -91,3 +91,7 @@ Owner and Finance should repeat the read/write-denial checks after deployment. S
 Each authorized workspace has a Refresh action and last-updated status. A failed refresh keeps earlier records visibly marked as potentially stale. Duplicate refreshes coalesce; hidden workspaces are not all refreshed in the background. Returning to a visible workspace after 30 seconds refreshes its data. A 401 clears the session and loaded records; late responses from the prior session are rejected.
 
 This pass does not create Passenger/Driver public signup or new staff roles. Owner bootstrap remains a controlled administrative procedure; your existing Owner is retained.
+
+## Build 43 additions
+
+Existing ride-read permissions also govern pickup instructions, no-show reason and waiting metadata. No role is broadened. Test Owner/Operations/Support/Finance ride views and the Compliance restriction; test text escaping of notes. No-show mutation is only available to the assigned authenticated driver, not a new staff override. Zero no-show fees/earnings must not appear as a completed earning.

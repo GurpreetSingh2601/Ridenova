@@ -1,0 +1,10 @@
+Traceback (most recent call last):
+  File "/workspace/scratch/6b898b26fe2d/RN43/verification/postgres-integration.py", line 215, in <module>
+    apply(DATABASE)
+  File "/workspace/scratch/6b898b26fe2d/RN43/Passenger/backend/migrate.py", line 11, in apply
+    with psycopg.connect(database, connect_timeout=10) as db:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/scratch/6b898b26fe2d/build43-tools/python/psycopg/connection.py", line 120, in connect
+    raise last_ex.with_traceback(None)
+psycopg.OperationalError: connection failed: connection to server at "127.0.0.1", port 58443 failed: Connection refused
+	Is the server running on that host and accepting TCP/IP connections?

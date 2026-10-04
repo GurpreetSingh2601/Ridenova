@@ -287,6 +287,25 @@ class Fleet(PreviousFleet):
                 'availableDriverCount': len(choices),
                 'dispatchMode': 'RADAR_ELIGIBLE' if sum(d <= RADAR_RADIUS_KM for d, _ in choices) >= 2 else 'EXCLUSIVE'}
 
+    def active_ride(self, driver_id):
+        ride = super().active_ride(driver_id)
+        if ride:
+            with self.service.connect() as db:
+                row = db.execute('SELECT p.first_name FROM passengers p JOIN rides r ON r.owner=p.id WHERE r.id=?', (ride['id'],)).fetchone()
+            ride['riderName'] = row[0] if row and row[0] else 'Rider'
+        return ride
+
+    def waiting(self, driver_id, ride_id):
+        from waiting43 import waiting_status
+        with self.service.connect() as db:
+            row = db.execute('SELECT payload FROM rides WHERE id=?', (ride_id,)).fetchone()
+            if not row:
+                reject(404, 'RIDE_NOT_FOUND', 'Unknown ride')
+            ride = json.loads(row[0])
+            if ride.get('fleetDriverId') != driver_id:
+                reject(403, 'FORBIDDEN', 'Ride belongs to another driver')
+            return waiting_status(self, db, driver_id, ride)
+
     def history(self, driver_id):
         result = super().history(driver_id)
         with self.service.connect() as db:

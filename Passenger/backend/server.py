@@ -1,4 +1,4 @@
-"""RideNova Build 42 shared API. Python 3.11+.
+"""RideNova Build 43 shared API. Python 3.11+.
 
 This CLI is loopback development only; staging uses wsgi.py with Gunicorn.
 The displayed development OTP does not prove ownership of a real phone number.
@@ -52,7 +52,7 @@ def decode_polyline(encoded):
 
 
 LIVE_STATES = ('SEARCHING', 'DRIVER_ASSIGNED', 'DRIVER_ARRIVED', 'TRIP_STARTED')
-TERMINAL_STATES = ('COMPLETED', 'CANCELLED_BY_RIDER', 'SCHEDULE_EXPIRED')
+TERMINAL_STATES = ('COMPLETED', 'CANCELLED_BY_RIDER', 'CANCELLED_NO_SHOW', 'SCHEDULE_EXPIRED')
 ACCESS_TTL_MS = 15 * 60 * 1000
 REFRESH_TTL_MS = 30 * 24 * 60 * 60 * 1000
 OTP_TTL_MS = 5 * 60 * 1000
@@ -635,7 +635,10 @@ class Service:
                     'pricingVersion': self.config['version'], **schedule,
                     'schedulePolicy': {'minimumLeadMinutes': self.config['scheduleMinLeadMinutes'],
                         'maximumDays': self.config['scheduleMaxDays'], 'freeCancellationWhileScheduled': True}}
-        payload = {**response, 'pickup': pickup, 'destination': destination}
+        notes = body.get('pickupNotes', '')
+        if not isinstance(notes, str) or len(notes) > 280 or any(ord(c) < 32 and c not in '\n\t' for c in notes):
+            fail(400, 'INVALID_PICKUP_NOTES', 'Pickup instructions must be text, up to 280 characters')
+        payload = {**response, 'pickup': pickup, 'destination': destination, 'pickupNotes': notes.strip()}
         with self.connect() as db:
             db.execute('INSERT INTO quotes VALUES (?,?,?,?,NULL)',
                        (token, owner, response['expiresAtEpochMs'], json.dumps(payload)))
@@ -645,7 +648,8 @@ class Service:
         db.execute('INSERT INTO events(ride_id,at_ms,actor,type,payload) VALUES (?,?,?,?,?)',
                    (ride['id'], self.clock(), actor, event_type,
                     json.dumps({'status': ride['status'], 'cancellationFeeCad': ride['cancellationFeeCad'],
-                                'scheduledAtEpochMs': ride['draft'].get('scheduledAtEpochMs')})))
+                                'scheduledAtEpochMs': ride['draft'].get('scheduledAtEpochMs'),
+                                'cancellationReason': ride.get('cancellationReason'), 'waiting': ride.get('waiting')})))
 
     def create(self, owner, body):
         token = body.get('quoteToken')
@@ -680,7 +684,7 @@ class Service:
             policy = quote['cancellationPolicy']
             ride = {'id': 'rn_' + secrets.token_hex(12), 'draft': {'pickup': quote['pickup'],
                     'destination': quote['destination'], 'routeEstimate': quote['route'],
-                    'selectedTier': tier, **schedule},
+                    'selectedTier': tier, 'pickupNotes': quote.get('pickupNotes', ''), **schedule},
                     'option': next(o for o in quote['options'] if o['tier'] == tier),
                     'status': 'SCHEDULED' if schedule['scheduled'] else 'SEARCHING', 'requestedAtEpochMs': now, 'updatedAtEpochMs': now,
                     'graceEndsAtEpochMs': now + policy['graceSeconds'] * 1000,
@@ -996,7 +1000,7 @@ class Service:
                           'pickup':self.fleet.label(r.get('draft',{}).get('pickup',{})),
                           'destination':self.fleet.label(r.get('draft',{}).get('destination',{})),
                           'updatedAtEpochMs':r.get('updatedAtEpochMs',0),
-                          'fareCents':r.get('option',{}).get('breakdown',{}).get('totalCents',0)}
+                          'pickupNotes':r.get('draft',{}).get('pickupNotes',''), 'cancellationReason':r.get('cancellationReason'), 'waiting':r.get('waiting'), 'fareCents':r.get('option',{}).get('breakdown',{}).get('totalCents',0)}
                          for r in rides]
             trip_list.sort(key=lambda r:r['updatedAtEpochMs'],reverse=True)
             totals={key:sum(entry[key] for entry in ledger) for key in
@@ -1159,7 +1163,7 @@ def make_handler(service):
             fail(403,'FORBIDDEN','Development admin authorization required')
         return staff.authorize(header,permission)
     class Handler(BaseHTTPRequestHandler):
-        server_version = 'RideNova/42.1'
+        server_version = 'RideNova/43'
 
         def log_message(self, *_):
             pass  # Do not print addresses, tokens, URLs or request bodies.
@@ -1226,7 +1230,7 @@ def make_handler(service):
                     if not isinstance(body, dict):
                         fail(400, 'INVALID_JSON', 'Expected JSON object')
                 if path == '/health' and self.command == 'GET':
-                    result = {'status': 'ok', 'version': '42.1', 'build': 42, 'releaseRevision': '42.1', 'developmentOnly': True,
+                    result = {'status': 'ok', 'version': '43', 'build': 43, 'releaseRevision': '43', 'developmentOnly': True,
                               'authentication': 'development-otp'}
                 elif path == '/v1/staff/login' and self.command == 'POST':
                     result = staff.login(body)
@@ -1348,6 +1352,7 @@ def make_handler(service):
                         elif tail in ('offer','requests/current') and self.command=='GET':result=fleet.offer(driver_id)
                         elif tail=='documents' and self.command=='GET':result=fleet.documents(driver_id)
                         elif tail.startswith('documents/') and len(tail.split('/'))==2 and self.command=='POST':result=fleet.submit_document(driver_id,tail.split('/')[1],body)
+                        elif tail.startswith('rides/') and tail.endswith('/waiting') and len(tail.split('/'))==3 and self.command=='GET':result=fleet.waiting(driver_id,tail.split('/')[1])
                         elif tail=='rides/active' and self.command=='GET':result=fleet.active_ride(driver_id)
                         elif tail=='trips' and self.command=='GET':result=fleet.history(driver_id)
                         elif tail=='rides/accept' and self.command=='POST':result=fleet.accept(driver_id,body.get('rideId',''))
@@ -1409,7 +1414,7 @@ def make_handler(service):
                             fail(400,'INVALID_PAGE','Invalid page or limit')
                         if page < 1 or page > 100000 or limit < 1 or limit > 100:
                             fail(400,'INVALID_PAGE','Page out of bounds (limit 1-100)')
-                        statuses={'SEARCHING','DRIVER_ASSIGNED','DRIVER_ARRIVED','TRIP_STARTED','COMPLETED','CANCELLED_BY_RIDER','CANCELLED_BY_DRIVER','SCHEDULED'}
+                        statuses={'SEARCHING','DRIVER_ASSIGNED','DRIVER_ARRIVED','TRIP_STARTED','COMPLETED','CANCELLED_BY_RIDER','CANCELLED_BY_DRIVER','CANCELLED_NO_SHOW','SCHEDULE_EXPIRED','SCHEDULED'}
                         query=params.get('q',[''])[0].strip()
                         if len(query)>64 or not re.fullmatch(r'[A-Za-z0-9_-]*',query):
                             fail(400,'INVALID_FILTER','Search using a ride ID only (maximum 64 characters)')
@@ -1438,7 +1443,7 @@ def make_handler(service):
                                   'pickup':service.fleet.label(r.get('draft',{}).get('pickup',{})),
                                   'destination':service.fleet.label(r.get('draft',{}).get('destination',{})),
                                   'updatedAtEpochMs':r.get('updatedAtEpochMs',0),
-                                  'fareCents':r.get('option',{}).get('breakdown',{}).get('totalCents',0)}
+                                  'pickupNotes':r.get('draft',{}).get('pickupNotes',''), 'cancellationReason':r.get('cancellationReason'), 'waiting':r.get('waiting'), 'fareCents':r.get('option',{}).get('breakdown',{}).get('totalCents',0)}
                                   for (payload,) in rows for r in [json.loads(payload)]]}
                     elif path == '/v1/admin/support-cases' and self.command == 'GET':
                         from urllib.parse import parse_qs,urlsplit
@@ -1605,7 +1610,7 @@ if __name__ == '__main__':
             stop.wait(5)
     worker = threading.Thread(target=scheduler, daemon=True)
     worker.start()
-    print(f'RideNova Build 42.1 / Admin v0.9.1 DEVELOPMENT ONLY on http://{args.host}:{args.port}; Trip Radar enabled; no real charges')
+    print(f'RideNova Build 43 / Admin v0.10.0 DEVELOPMENT ONLY on http://{args.host}:{args.port}; Trip Radar enabled; no real charges')
     server = ThreadingHTTPServer((args.host, args.port), make_handler(service))
     try:
         server.serve_forever()

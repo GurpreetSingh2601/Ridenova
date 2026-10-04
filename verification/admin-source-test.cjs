@@ -11,7 +11,7 @@ assert.equal(scripts.length, 7, 'seven Admin scripts must ship');
 scripts.forEach((source, index) => new vm.Script(source, {filename: `admin-inline-${index + 1}.js`}));
 
 for (const label of ['Dashboard', 'Rides', 'Drivers / Fleet', 'Support', 'Finance',
-                     'Staff & Access', 'Audit Logs', 'BUILD 42', 'ADMIN v0.9.1']) {
+                     'Staff & Access', 'Audit Logs', 'BUILD 43', 'ADMIN v0.10.0']) {
   assert.ok(html.includes(label), `missing ${label}`);
 }
 for (const id of ['staff-workspace', 'audit-workspace', 'staff-create-form', 'staff-login',

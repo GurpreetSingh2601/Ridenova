@@ -1,0 +1,6 @@
+Build 43 pickup/trip reliability staging source
+Files: 335
+Longest archive path: 89 characters
+One shared backend; both Android sources; Admin; migrations; deployment workflows included.
+Caches, local credentials, databases and signing keys excluded.
+SHA256 inventory and ZIP CRC validated by package-build43.py.

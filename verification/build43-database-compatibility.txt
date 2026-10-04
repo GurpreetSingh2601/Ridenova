@@ -1,0 +1,1 @@
+PASS: migrations 001–003 match accepted Build 42.1 byte-for-byte. New notes/waiting fields are additive JSON payload data. No database, credentials or signing key is included in the source release.

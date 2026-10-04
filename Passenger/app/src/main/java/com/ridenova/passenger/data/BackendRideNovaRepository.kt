@@ -19,6 +19,7 @@ class BackendRideNovaRepository(
     override suspend fun quote(request: QuoteRequest): QuoteResponse {
         val json = JSONObject()
             .put("pickup", placeJson(request.pickup))
+            .put("pickupNotes", request.pickupNotes)
             .put("destination", placeJson(request.destination))
             .put("route", routeJson(request.route))
             .put("scheduled", request.scheduled)
@@ -143,6 +144,7 @@ class BackendRideNovaRepository(
     private fun tripFromJson(json: JSONObject): RideTrip = RideTrip(
         id = json.getString("id"),
         draft = draftFromJson(json.getJSONObject("draft")),
+        waitingEndsAtEpochMs = json.optJSONObject("waiting")?.takeIf { it.optBoolean("verifiedArrival") }?.optLong("eligibleAtEpochMs"),
         option = optionFromJson(json.getJSONObject("option")),
         status = TripStatus.valueOf(json.getString("status")),
         requestedAtEpochMs = json.getLong("requestedAtEpochMs"),
@@ -240,6 +242,8 @@ class BackendRideNovaRepository(
 
     private fun draftFromJson(json: JSONObject) = BookingDraft(
         pickup = placeFromJson(json.getJSONObject("pickup")),
+        pickupManual = true,
+        pickupNotes = json.optString("pickupNotes", ""),
         destination = json.optJSONObject("destination")?.let(::placeFromJson),
         selectedTier = RideTier.valueOf(json.optString("selectedTier", "ECONOMY")),
         routeEstimate = json.optJSONObject("routeEstimate")?.let(::routeFromJson),

@@ -74,7 +74,7 @@ class Build41TransportTests(unittest.TestCase):
 
     def test_health_is_liveness_and_readiness_detects_worker_failure(self):
         out = self.call('/health', **{'wsgi.url_scheme': 'http', 'HTTP_HOST': 'internal'})
-        self.assertEqual(out['json']['build'], 42)
+        self.assertEqual(out['json']['build'], 43)
         with patch('operations.ready', return_value=False): self.assertEqual(self.call('/ready')['status'], 503)
         with patch('operations.ready', return_value=True): self.assertEqual(self.call('/ready')['status'], 200)
 

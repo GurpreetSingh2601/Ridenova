@@ -122,7 +122,7 @@ class RemoteDriverRepository(context: Context, url: String, token: String, priva
         val pickup = draft.getJSONObject("pickup")
         val destination = draft.getJSONObject("destination")
         return request(json.getString("id"), pickup, destination, option,
-            draft.optJSONObject("routeEstimate")) to stage
+            draft.optJSONObject("routeEstimate")).copy(pickupNotes = draft.optString("pickupNotes", ""), rider = Rider("rider", json.optString("riderName", "Rider"), 0.0, 0)) to stage
     }
 
     suspend fun publishPresence(point: LatLng) {
@@ -139,7 +139,7 @@ class RemoteDriverRepository(context: Context, url: String, token: String, priva
     }
 
     private fun offer(json: JSONObject) = RideRequest(
-        id = json.getString("id"), rider = Rider("dev", json.optString("riderName", "Demo rider"), 0.0, 0),
+        id = json.getString("id"), rider = Rider("dev", json.optString("riderName", "Rider"), 0.0, 0),
         pickupName = json.optString("pickupName"), pickup = point(json.getJSONObject("pickup")),
         destinationName = json.optString("destinationName"), destination = point(json.getJSONObject("destination")),
         pickupDistanceKm = json.optDouble("pickupDistanceKm", 0.0), pickupEtaMin = json.optInt("pickupEtaMin", 5),
@@ -154,9 +154,9 @@ class RemoteDriverRepository(context: Context, url: String, token: String, priva
 
     private fun request(id: String, pickup: JSONObject, destination: JSONObject,
                         option: JSONObject, route: JSONObject?) = RideRequest(
-        id = id, rider = Rider("dev", "Demo rider", 0.0, 0),
-        pickupName = pickup.optString("name"), pickup = point(pickup),
-        destinationName = destination.optString("name"), destination = point(destination),
+        id = id, rider = Rider("dev", "Rider", 0.0, 0),
+        pickupName = pickup.optString("address").ifBlank { pickup.optString("name") }, pickup = point(pickup),
+        destinationName = destination.optString("address").ifBlank { destination.optString("name") }, destination = point(destination),
         pickupDistanceKm = 0.0, pickupEtaMin = 5,
         tripDistanceKm = route?.optDouble("distanceKm") ?: 0.0,
         tripEtaMin = route?.optInt("durationMinutes") ?: 0,

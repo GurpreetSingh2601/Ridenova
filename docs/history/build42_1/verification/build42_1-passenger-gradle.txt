@@ -1,0 +1,61 @@
+Picked up JAVA_TOOL_OPTIONS: -Djavax.net.ssl.trustStore=/etc/ssl/certs/java/cacerts
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.6.0/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+
+Gradle daemon build output (client output was truncated):
+w: file:///workspace/scratch/6b898b26fe2d/RideNova_Build42_1/Passenger/app/src/main/java/com/ridenova/passenger/data/BackendRideNovaRepository.kt:64:84 Condition is always 'true'.
+w: file:///workspace/scratch/6b898b26fe2d/RideNova_Build42_1/Passenger/app/src/main/java/com/ridenova/passenger/ui/MapExperience.kt:328:40 Unnecessary safe call on a non-null receiver of type 'PlaceSuggestion'.
+w: file:///workspace/scratch/6b898b26fe2d/RideNova_Build42_1/Passenger/app/src/main/java/com/ridenova/passenger/ui/MapExperience.kt:329:42 Unnecessary safe call on a non-null receiver of type 'PlaceSuggestion'.
+w: file:///workspace/scratch/6b898b26fe2d/RideNova_Build42_1/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:1119:76 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RideNova_Build42_1/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:1138:76 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RideNova_Build42_1/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:1159:86 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RideNova_Build42_1/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:1381:76 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RideNova_Build42_1/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:1736:44 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RideNova_Build42_1/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:1904:147 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RideNova_Build42_1/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:1952:166 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RideNova_Build42_1/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:2190:91 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RideNova_Build42_1/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:2676:86 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RideNova_Build42_1/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:2686:36 'val Icons.Filled.ReceiptLong: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ReceiptLong.
+w: file:///workspace/scratch/6b898b26fe2d/RideNova_Build42_1/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:3010:42 'val Icons.Filled.Help: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.Help.
+w: file:///workspace/scratch/6b898b26fe2d/RideNova_Build42_1/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:3024:36 'val Icons.Filled.Logout: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.Logout.
+w: file:///workspace/scratch/6b898b26fe2d/RideNova_Build42_1/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:3066:86 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RideNova_Build42_1/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:3152:136 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RideNova_Build42_1/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:3248:86 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RideNova_Build42_1/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:3279:86 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RideNova_Build42_1/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:3332:86 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RideNova_Build42_1/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:3393:41 'val Icons.Filled.ReceiptLong: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ReceiptLong.
+Picked up JAVA_TOOL_OPTIONS: -Djavax.net.ssl.trustStore=/etc/ssl/certs/java/cacerts
+
+Picked up JAVA_TOOL_OPTIONS: -Djavax.net.ssl.trustStore=/etc/ssl/certs/java/cacerts
+
+Picked up JAVA_TOOL_OPTIONS: -Djavax.net.ssl.trustStore=/etc/ssl/certs/java/cacerts
+
+Unable to strip the following libraries, packaging them as they are: libandroidx.graphics.path.so. Run with --info option to learn more.
+Unable to strip the following libraries, packaging them as they are: libandroidx.graphics.path.so. Run with --info option to learn more.
+w: file:///workspace/scratch/6b898b26fe2d/RideNova_Build42_1/Passenger/app/src/main/java/com/ridenova/passenger/data/BackendRideNovaRepository.kt:64:84 Condition is always 'true'.
+w: file:///workspace/scratch/6b898b26fe2d/RideNova_Build42_1/Passenger/app/src/main/java/com/ridenova/passenger/ui/MapExperience.kt:328:40 Unnecessary safe call on a non-null receiver of type 'PlaceSuggestion'.
+w: file:///workspace/scratch/6b898b26fe2d/RideNova_Build42_1/Passenger/app/src/main/java/com/ridenova/passenger/ui/MapExperience.kt:329:42 Unnecessary safe call on a non-null receiver of type 'PlaceSuggestion'.
+w: file:///workspace/scratch/6b898b26fe2d/RideNova_Build42_1/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:1119:76 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RideNova_Build42_1/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:1138:76 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RideNova_Build42_1/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:1159:86 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RideNova_Build42_1/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:1381:76 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RideNova_Build42_1/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:1736:44 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RideNova_Build42_1/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:1904:147 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RideNova_Build42_1/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:1952:166 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RideNova_Build42_1/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:2190:91 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RideNova_Build42_1/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:2676:86 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RideNova_Build42_1/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:2686:36 'val Icons.Filled.ReceiptLong: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ReceiptLong.
+w: file:///workspace/scratch/6b898b26fe2d/RideNova_Build42_1/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:3010:42 'val Icons.Filled.Help: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.Help.
+w: file:///workspace/scratch/6b898b26fe2d/RideNova_Build42_1/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:3024:36 'val Icons.Filled.Logout: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.Logout.
+w: file:///workspace/scratch/6b898b26fe2d/RideNova_Build42_1/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:3066:86 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RideNova_Build42_1/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:3152:136 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RideNova_Build42_1/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:3248:86 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RideNova_Build42_1/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:3279:86 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RideNova_Build42_1/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:3332:86 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///workspace/scratch/6b898b26fe2d/RideNova_Build42_1/Passenger/app/src/main/java/com/ridenova/passenger/ui/RideNovaApp.kt:3393:41 'val Icons.Filled.ReceiptLong: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ReceiptLong.
+
+[Incubating] Problems report is available at: file:///workspace/scratch/6b898b26fe2d/RideNova_Build42_1/Passenger/build/reports/problems/problems-report.html
+
+BUILD SUCCESSFUL in 2m 39s
+89 actionable tasks: 86 executed, 3 up-to-date
+Exit code: 0
+Verified debug and staging output-metadata.json: versionCode 45, versionName 0.34.1-build42.1 (+ -staging).

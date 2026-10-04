@@ -297,7 +297,7 @@ class Fleet(Foundation):
     def accept(self, driver_id, ride_id): return self.action(driver_id,ride_id,'accept',{})
 
     def action(self, driver_id, ride_id, action, body):
-        if action not in ('accept','decline','arrive','start','complete','cancel','location'): reject(404,'NOT_FOUND','Unknown action')
+        if action not in ('accept','decline','arrive','start','complete','cancel','location','no-show'): reject(404,'NOT_FOUND','Unknown action')
         pin_error=False
         with self.service.connect() as db:
             db.execute('BEGIN IMMEDIATE')
@@ -325,8 +325,27 @@ class Fleet(Foundation):
                     pin=str(secrets.randbelow(9000)+1000))
             else:
                 if ride.get('fleetDriverId')!=driver_id: reject(403,'FORBIDDEN','Ride belongs to another driver')
+                if action == 'no-show':
+                    if ride['status'] == 'CANCELLED_NO_SHOW':
+                        ride.pop('pin', None)
+                        return ride
+                    from waiting43 import cancel_no_show
+                    cancel_no_show(self, db, driver_id, ride, body)
+                    self.service.event(db, ride, driver_id, 'FLEET_NO_SHOW')
+                    self._audit(db, driver_id, 'driver', 'NO_SHOW_' + ride_id)
+                    db.execute('UPDATE rides SET payload=? WHERE id=?', (json.dumps(ride), ride_id))
+                    ride.pop('pin', None)
+                    return ride
                 target={'arrive':('DRIVER_ASSIGNED','DRIVER_ARRIVED'),'start':('DRIVER_ARRIVED','TRIP_STARTED'),'complete':('TRIP_STARTED','COMPLETED')}
                 if action in target and ride['status']==target[action][1]:
+                    if action == 'arrive' and not ride.get('waiting', {}).get('verifiedArrival'):
+                        from waiting43 import begin_wait, near_pickup
+                        if not near_pickup(self, db, driver_id, ride):
+                            reject(409, 'PICKUP_LOCATION_REQUIRED', 'Move near pickup and wait for a fresh GPS fix')
+                        begin_wait(self, db, driver_id, ride)
+                        ride['updatedAtEpochMs'] = now
+                        db.execute('UPDATE rides SET payload=? WHERE id=?', (json.dumps(ride), ride_id))
+                        self.service.event(db, ride, driver_id, 'FLEET_WAIT_VERIFIED')
                     ride.pop('pin',None); return ride # safe retry after a lost response
                 if action=='location':
                     if ride['status'] not in ACTIVE: reject(409,'INVALID_TRANSITION','Ride is no longer active')
@@ -337,7 +356,7 @@ class Fleet(Foundation):
                 elif action=='cancel':
                     if ride['status'] not in ('DRIVER_ASSIGNED','DRIVER_ARRIVED'): reject(409,'INVALID_TRANSITION','Cannot cancel after trip starts')
                     ride['status']='SEARCHING'
-                    for key in ('fleetDriverId','driver','driverPosition','pin','dispatch'): ride.pop(key,None)
+                    for key in ('fleetDriverId','driver','driverPosition','pin','dispatch','waiting'): ride.pop(key,None)
                     db.execute('INSERT OR REPLACE INTO fleet_declines VALUES (?,?,?)',(driver_id,ride_id,now+60000))
                 else:
                     if ride['status']!=target[action][0]: reject(409,'INVALID_TRANSITION','Advance trip states in order')
@@ -350,6 +369,9 @@ class Fleet(Foundation):
                             pin_error=True
                     if not pin_error:
                         ride['status']=target[action][1]
+                        if action == 'arrive':
+                            from waiting43 import begin_wait
+                            begin_wait(self, db, driver_id, ride)
                         if action=='complete':
                             ride['payment'].update(status='CAPTURED_DEMO',amountCents=ride['option']['breakdown']['totalCents'])
                             self.service.record_development_earning(db,ride)

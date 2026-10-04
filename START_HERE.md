@@ -1,5 +1,4 @@
-# RideNova Build 42.1 — UI and UX update
+# RideNova Build 43
 
-Start with [START_HERE_BUILD_42_1.md](START_HERE_BUILD_42_1.md).
-This is the complete Passenger, Driver, Admin and shared-backend source bundle.
-Previous build instructions are kept under `docs/history/` for reference.
+Read **START_HERE_BUILD_43.md** first. It is the current setup guide.
+Older build documents under `docs/history/` are historical records, not current installation instructions.
