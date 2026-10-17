@@ -1,4 +1,3 @@
-# RideNova Build 43
+# RideNova Build 44
 
-Read **START_HERE_BUILD_43.md** first. It is the current setup guide.
-Older build documents under `docs/history/` are historical records, not current installation instructions.
+Read START_HERE_BUILD_44.md first. It is the current setup/migration guide. Historical notes are under docs/history.

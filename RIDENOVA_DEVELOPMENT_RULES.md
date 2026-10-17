@@ -1,6 +1,6 @@
 # RideNova development rules
 
-Updated for Build 43 pickup and trip reliability on 2026-10-03 UTC. Preserve this file in every later build.
+Updated for Build 44 safety operations on 2026-10-07 UTC. Preserve this file in every later build.
 
 ## Architecture
 
@@ -26,7 +26,7 @@ Updated for Build 43 pickup and trip reliability on 2026-10-03 UTC. Preserve thi
 
 ## Required testing
 
-- Run `python VERIFY_BUILD_43.py`.
+- Run `python VERIFY_BUILD_44.py`.
 - Require PostgreSQL concurrency, import and restore tests in `verification/postgres-integration.py`; SQLite and SQL syntax tests are not substitutes.
 - Require matching API/worker revision and fresh heartbeat at `/ready` before inviting staging testers.
 - Run all backend regression tests and add a targeted test for every regression.
@@ -39,8 +39,8 @@ Updated for Build 43 pickup and trip reliability on 2026-10-03 UTC. Preserve thi
 
 ## Known current boundaries
 
-- The CLI is development-only. Gunicorn/WSGI and invitation restrictions serve controlled staging. The user has a Build 42 Render setup; this Build 43 revision has not been deployed or provider-verified by this work.
-- Actual Build 43 execution results are recorded in TEST_RESULTS_BUILD_43.md. Device, hosted performance and real-provider acceptance remain distinct gates.
+- The CLI is development-only. Gunicorn/WSGI and invitation restrictions serve controlled staging. The user has a Build 42 Render setup; this Build 44 revision has not been deployed or provider-verified by this work.
+- Actual Build 44 execution results are recorded in TEST_RESULTS_BUILD_44.md. Device, hosted performance and real-provider acceptance remain distinct gates.
 - Staging has conservative global request serialization/rate caps. Build 42 batches rate checks and logs phase timings; do not remove the request gate until atomic dispatch has independent guarantees.
 - Managed backups, monitoring notifications and CI/CD account configuration require authorized setup and verification.
 - OTP delivery, payouts and identity/document verification remain simulations. Stripe test payments are implemented behind test-key configuration; no live charge path is enabled.
@@ -76,3 +76,11 @@ Updated for Build 43 pickup and trip reliability on 2026-10-03 UTC. Preserve thi
 ## Build 43 invariants
 
 Manual pickup is a user decision; asynchronous GPS must not overwrite it. Quote-bound instructions, route and fare stay consistent. Never persist reusable quotes in the booking draft. No-show needs a transaction, correct assigned driver, verified five-minute wait, fresh nearby GPS and an explicit reason/check. It records zero fee and no earning/boost. Retries must be idempotent. No contact attempt is invented. New trip states require coordinated app/API compatibility. Keep current limitations and actual executed checks in the release documents.
+
+## Build 44 invariants
+
+One backend; additive migration 004; preserve 001–003 checksums, accounts, accepted fares and atomic assignments. Actual GPS belongs to the observed trip/time; stale data cannot refresh availability. Passenger tracking needs active-trip consent. No automatic accusations, financial penalties or reassignment. Owner/Operations pre-start reassignment requires a reason and revokes old-driver access.
+
+Document expiry blocks new work, not safe completion of a started trip or account/earnings access. Review/downloads are audited. Provider route cache rights differ from actual GPS evidence holds. Use Google Maps for Google route results. See retention/known-issues guides.
+
+Run portable regressions, browser/RBAC tests, Android variants and PostgreSQL integration/restore CI. Keep actual results and pending gates explicit. Keep checkpoint and release guides persistent. Build 44 includes Share Trip/emergency basics; boost map remains deferred. Do not activate real payments or uncapped incentives.

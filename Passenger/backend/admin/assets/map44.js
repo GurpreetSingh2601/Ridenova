@@ -1,0 +1,13 @@
+/* RideNova's small Google Maps adapter. No Google data is plotted on another provider. */
+(()=>{'use strict';let loading;
+window.loadRideNovaMap=()=>loading||(loading=(async()=>{
+ const r=await fetch('/map-config',{cache:'no-store'}),c=await r.json();
+ if(!r.ok||!c.browserKey)throw Error('Map unavailable: configure RIDENOVA_MAPS_BROWSER_KEY for this website. Trip records remain available.');
+ await new Promise((resolve,reject)=>{const script=document.createElement('script');let timer=setTimeout(()=>reject(Error('Map loading timed out. Retry refresh.')),20000);window.rnMapsReady44=()=>{clearTimeout(timer);resolve()};window.gm_authFailure=()=>{clearTimeout(timer);reject(Error('Google Maps authorization failed. Check browser key restrictions.'))};script.referrerPolicy='origin';script.src='https://maps.googleapis.com/maps/api/js?key='+encodeURIComponent(c.browserKey)+'&v=quarterly&loading=async&callback=rnMapsReady44';script.onerror=()=>{clearTimeout(timer);reject(Error('Map network unavailable.'))};document.head.append(script)});
+})().catch(e=>{loading=null;throw e}));
+const ll=p=>({lat:p[0],lng:p[1]});
+window.RNMap={map(id){const m=new google.maps.Map(document.getElementById(id),{center:ll([49.28,-123.12]),zoom:11,streetViewControl:false,mapTypeControl:false});return {native:m,setView(p,z){m.setCenter(ll(p));m.setZoom(z);return this},invalidateSize(){google.maps.event.trigger(m,'resize')},fitBounds(points,opts){const b=new google.maps.LatLngBounds();points.forEach(p=>b.extend(ll(p)));m.fitBounds(b,35);google.maps.event.addListenerOnce(m,'idle',()=>{if(m.getZoom()>opts.maxZoom)m.setZoom(opts.maxZoom)})}}},
+layerGroup(){return {items:[],native:null,addTo(map){this.native=map.native;return this},clearLayers(){this.items.forEach(x=>x.setMap(null));this.items=[]},removeLayer(x){x.native?.setMap(null);this.items=this.items.filter(i=>i!==x.native)}}},
+circleMarker(p,o){let content;return {native:null,bindPopup(c){content=c;return this},bindTooltip(c){content=c;return this},addTo(group){this.native=new google.maps.Marker({map:group.native,position:ll(p),title:typeof content==='string'?content:content?.textContent,icon:{path:google.maps.SymbolPath.CIRCLE,scale:o.radius||8,fillColor:o.color,fillOpacity:o.fillOpacity||.85,strokeColor:'#ffffff',strokeWeight:2}});if(content)this.native.addListener('click',()=>new google.maps.InfoWindow({content}).open({map:group.native,anchor:this.native}));group.items.push(this.native);return this}}},
+polyline(points,o){return {addTo(group){const line=new google.maps.Polyline({map:group.native,path:points.map(ll),strokeColor:o.color,strokeOpacity:.9,strokeWeight:4});group.items.push(line);return this}}}};
+})();

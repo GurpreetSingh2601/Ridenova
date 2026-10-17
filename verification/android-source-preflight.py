@@ -1,4 +1,4 @@
-"""Build 43 Android source/configuration preflight; this is not an Android compilation."""
+"""Build 44 Android source/configuration preflight; this is not an Android compilation."""
 from pathlib import Path
 import re
 import xml.etree.ElementTree as ET
@@ -24,8 +24,8 @@ def balanced_kotlin(path):
 def main():
     passenger_gradle = (ROOT / 'Passenger/app/build.gradle.kts').read_text(encoding='utf-8')
     driver_gradle = (ROOT / 'Driver/app/build.gradle.kts').read_text(encoding='utf-8')
-    assert 'versionName = "0.35-build43"' in passenger_gradle
-    assert 'versionName = "0.20-build43"' in driver_gradle
+    assert 'versionName = "0.36-build44"' in passenger_gradle
+    assert 'versionName = "0.21-build44"' in driver_gradle
     for project in ('Passenger', 'Driver'):
         staging_manifest = ROOT / project / 'app/src/staging/AndroidManifest.xml'
         ET.parse(staging_manifest)
@@ -56,7 +56,7 @@ def main():
     for relative in ('ui/DriverViewModel.kt', 'location/DriverLocationService.kt'):
         source = (ROOT/'Driver/app/src/main/java/com/ridenova/driver'/relative).read_text()
         assert 'BuildConfig.DEBUG && BuildConfig.RIDENOVA_DEV_URL' not in source
-    print('PASS: Android manifests parse; Kotlin/Gradle delimiters and Build 43 source invariants are valid.')
+    print('PASS: Android manifests parse; Kotlin/Gradle delimiters and Build 44 source invariants are valid.')
     print('NOTE: This preflight does not replace Gradle compilation or real-device testing.')
 
 

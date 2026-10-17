@@ -89,7 +89,7 @@ class Fleet(Foundation):
             if not db.execute('SELECT 1 FROM fleet_drivers WHERE id=?',(driver_id,)).fetchone():
                 reject(404,'DRIVER_NOT_FOUND','Unknown driver')
             if status=='APPROVED' and not self.ready(db,driver_id):
-                reject(409,'DOCUMENTS_REQUIRED','Approve all four current documents first')
+                reject(409,'DOCUMENTS_REQUIRED','Approve all required current documents first')
             db.execute('UPDATE fleet_drivers SET status=?, online=CASE WHEN ?="APPROVED" THEN online ELSE 0 END WHERE id=?',(status,status,driver_id))
             db.execute('DELETE FROM fleet_offers WHERE driver_id=?',(driver_id,))
             self._audit(db,driver_id,'development-admin','STATUS_'+status)
@@ -108,6 +108,7 @@ class Fleet(Foundation):
             if not old: reject(404,'DRIVER_NOT_FOUND','Unknown driver')
             if tuple(values)!=tuple(old):
                 db.execute('UPDATE fleet_drivers SET name=?,vehicle=?,plate=?,online=0,status=CASE WHEN status="SUSPENDED" THEN status ELSE "PENDING" END WHERE id=?',(*values,driver_id))
+                if hasattr(self,'archive_documents'):self.archive_documents(db,driver_id)
                 db.execute('UPDATE fleet_documents SET status="PENDING",revision=revision+1,note="Profile changed; review again" WHERE driver_id=? AND content IS NOT NULL',(driver_id,))
                 db.execute('DELETE FROM fleet_offers WHERE driver_id=?',(driver_id,))
                 self._audit(db,driver_id,'driver','PROFILE_CHANGED')
@@ -121,7 +122,7 @@ class Fleet(Foundation):
                 'uploadSupported':True,'maxBytes':MAX_DOCUMENT,'developmentOnly':True,'verified':False}
 
     def submit_document(self, driver_id, kind, body):
-        if kind not in KINDS: reject(400,'INVALID_KIND','Unknown document kind')
+        if kind not in getattr(self,'document_kinds',KINDS): reject(400,'INVALID_KIND','Unknown document kind')
         filename=body.get('filename')
         if not isinstance(filename,str) or not 1<=len(filename)<=120 or '/' in filename or '\\' in filename:
             reject(400,'INVALID_FILENAME','Use a filename of at most 120 characters')
@@ -143,6 +144,7 @@ class Fleet(Foundation):
             row=db.execute('SELECT revision FROM fleet_documents WHERE driver_id=? AND kind=?',(driver_id,kind)).fetchone()
             if not row: reject(404,'DRIVER_NOT_FOUND','Unknown driver')
             if type(body.get('revision')) is not int or body['revision']!=row[0]: reject(409,'DOCUMENT_CHANGED','Refresh the checklist before uploading')
+            if hasattr(self,'archive_documents'):self.archive_documents(db,driver_id,kind)
             db.execute('UPDATE fleet_documents SET status="PENDING",expiry_date=?,filename=?,mime=?,content=?,revision=revision+1,note=NULL,submitted_ms=? WHERE driver_id=? AND kind=?',
                        (expiry,filename,mime,data,self.service.clock(),driver_id,kind))
             db.execute('UPDATE fleet_drivers SET online=0 WHERE id=?',(driver_id,))
@@ -160,6 +162,7 @@ class Fleet(Foundation):
             if not row or not row[1]: reject(404,'DOCUMENT_NOT_FOUND','No uploaded document')
             if type(body.get('revision')) is not int or row[0]!=body['revision']: reject(409,'DOCUMENT_CHANGED','Document changed; reload before reviewing')
             if status=='APPROVED' and row[2]<self.today(): reject(409,'DOCUMENT_EXPIRED','Cannot approve an expired document')
+            if hasattr(self,'archive_documents'):self.archive_documents(db,driver_id,kind)
             db.execute('UPDATE fleet_documents SET status=?,note=?,revision=revision+1 WHERE driver_id=? AND kind=?',(status,note.strip(),driver_id,kind))
             if status=='REJECTED':
                 db.execute('UPDATE fleet_drivers SET online=0 WHERE id=?',(driver_id,))
@@ -361,6 +364,7 @@ class Fleet(Foundation):
                 else:
                     if ride['status']!=target[action][0]: reject(409,'INVALID_TRANSITION','Advance trip states in order')
                     if action=='start':
+                        if not self.ready(db,driver_id):reject(409,'DOCUMENTS_REQUIRED','Required documents expired or need review; contact operations before starting')
                         attempt=db.execute('SELECT attempts,until_ms FROM fleet_pin_attempts WHERE ride_id=?',(ride_id,)).fetchone()
                         if attempt and attempt[0]>=5 and attempt[1]>now: reject(429,'PIN_LOCKED','Too many PIN attempts; wait one minute')
                         if not isinstance(body.get('pin'),str) or not secrets.compare_digest(body['pin'],ride['pin']):

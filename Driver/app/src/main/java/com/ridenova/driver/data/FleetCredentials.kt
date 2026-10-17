@@ -18,7 +18,8 @@ class FleetCredentials(private val context: Context) {
         clearAccountCache()
     }
     fun clearAccountCache() {
-        for (name in listOf("driver_demo_session", "driver_demo_trips", "driver_demo_profile")) {
+        File(context.cacheDir,"documents44").deleteRecursively()
+        for (name in listOf("driver_demo_session", "driver_demo_trips", "driver_demo_profile", "gps_queue44")) {
             check(context.getSharedPreferences(name, Context.MODE_PRIVATE).edit().clear().commit()) { "Could not clear account cache" }
         }
     }

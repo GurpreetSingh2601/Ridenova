@@ -69,7 +69,7 @@ def create_app(settings=None):
             elif settings.environment == 'staging' and path not in ('/health', '/ready') and environ.get('wsgi.url_scheme') != 'https':
                 status, payload = 400, {'code': 'HTTPS_REQUIRED', 'message': 'HTTPS is required'}
             elif path == '/health':
-                payload = {'status': 'ok', 'build': 43, 'version': '43', 'releaseRevision': '43', 'environment': settings.environment,
+                payload = {'status': 'ok', 'build': 44, 'version': '44', 'releaseRevision': '44', 'environment': settings.environment,
                            'payments': 'stripe-test-optional', 'publicLaunch': False,
                            'revision': os.environ.get('RENDER_GIT_COMMIT', 'local')}
             elif path == '/ready':
@@ -113,7 +113,7 @@ def create_app(settings=None):
             data = json.dumps(payload).encode()
             headers.extend([('Content-Type', 'application/json'), ('Content-Length', str(len(data))), ('Cache-Control', 'no-store')])
         headers.extend([('X-Request-ID', request_id), ('X-Frame-Options', 'DENY'),
-                        ('X-Content-Type-Options', 'nosniff'), ('Referrer-Policy', 'no-referrer')])
+                        ('X-Content-Type-Options', 'nosniff'), ('Referrer-Policy', 'strict-origin-when-cross-origin' if path in ('/admin','/share') else 'no-referrer')])
         if settings.environment == 'staging':
             headers.append(('Strict-Transport-Security', 'max-age=31536000'))
         # No query strings, bodies, phones, coordinates, tokens or IP addresses.

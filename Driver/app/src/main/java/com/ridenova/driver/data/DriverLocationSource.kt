@@ -14,18 +14,20 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 
 /** Foreground-only device positions. The caller checks runtime location permission. */
+data class DriverGpsSample(val position: LatLng, val observedAt: Long, val accuracy: Double)
+
 class DriverLocationSource(context: Context) {
     private val client = LocationServices.getFusedLocationProviderClient(context)
 
     @SuppressLint("MissingPermission")
-    fun locations(): Flow<LatLng> = callbackFlow {
+    fun locations(): Flow<DriverGpsSample> = callbackFlow {
         val callback = object : LocationCallback() {
             override fun onLocationResult(result: LocationResult) {
-                result.lastLocation?.let { trySend(LatLng(it.latitude, it.longitude)) }
+                result.lastLocation?.let { trySend(DriverGpsSample(LatLng(it.latitude, it.longitude), it.time, it.accuracy.toDouble())) }
             }
         }
         client.lastLocation.addOnSuccessListener { location ->
-            location?.let { trySend(LatLng(it.latitude, it.longitude)) }
+            location?.let { trySend(DriverGpsSample(LatLng(it.latitude, it.longitude), it.time, it.accuracy.toDouble())) }
         }
         val request = LocationRequest.Builder(Priority.PRIORITY_BALANCED_POWER_ACCURACY, 5_000L)
             .setMinUpdateIntervalMillis(2_000L)

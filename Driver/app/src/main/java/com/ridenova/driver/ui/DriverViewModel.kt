@@ -283,7 +283,8 @@ class DriverViewModel(application: Application) : AndroidViewModel(application) 
         locationJob?.cancel()
         if (!permissionGranted) return
         locationJob = viewModelScope.launch {
-            DriverLocationSource(context.applicationContext).locations().collect { point ->
+            DriverLocationSource(context.applicationContext).locations().collect { sample ->
+                val point = sample.position
                 _uiState.update { current ->
                     val ride = current.activeRide
                     val next = when (current.rideStage) {
@@ -311,7 +312,7 @@ class DriverViewModel(application: Application) : AndroidViewModel(application) 
                     stamp - lastPresencePublishAt >= 10_000L) {
                     lastPresencePublishAt = stamp
                     viewModelScope.launch {
-                        runCatching { remote.publishPresence(point) }
+                        runCatching { remote.publishPresence(point, sample.observedAt, sample.accuracy) }
                             .onFailure { ex -> if (ex !is CancellationException) _uiState.update { it.copy(connectionError = ex.localizedMessage) } }
                     }
                 }
@@ -320,7 +321,7 @@ class DriverViewModel(application: Application) : AndroidViewModel(application) 
                     stamp - lastLocationPublishAt >= 5_000L) {
                     lastLocationPublishAt = stamp
                     viewModelScope.launch {
-                        runCatching { remote.publish(ride.id, point) }
+                        runCatching { remote.publish(ride.id, point, sample.observedAt, sample.accuracy) }
                             .onFailure { ex -> if (ex !is CancellationException) _uiState.update { it.copy(connectionError = ex.localizedMessage) } }
                     }
                 }

@@ -18,6 +18,7 @@ import psycopg
 from psycopg import sql
 import test_build35 as legacy
 import test_build43 as build43
+import test_build44 as build44
 from database import request_lock
 from migrate import apply, check
 from server import Service
@@ -145,7 +146,7 @@ class PostgresMigrationTests(unittest.TestCase):
     def test_migrations_reapply_without_changes(self):
         apply(DATABASE); check(DATABASE)
         with psycopg.connect(DATABASE) as db:
-            self.assertEqual(db.execute('SELECT COUNT(*) FROM schema_migrations').fetchone()[0], 3)
+            self.assertEqual(db.execute('SELECT COUNT(*) FROM schema_migrations').fetchone()[0], 4)
 
     def test_build42_finance_and_boost_persist_across_services(self):
         now = 1_800_000_000_000
@@ -210,6 +211,16 @@ class PostgresMigrationTests(unittest.TestCase):
             with self.assertRaises(RuntimeError): restore(RESTORE, path)
             with self.assertRaises(RuntimeError): backup(DATABASE, path)
 
+
+class PostgresOperations44Tests(build44.Build44Tests):
+    def setUp(self):
+        empty(DATABASE)
+        self.now = 1789689600000  # same September 18 2026 fixture as SQLite suite
+        self.service = Service(DATABASE, clock=lambda: self.now)
+        self.fleet = self.service.fleet
+        self.request = {'pickup': {'name': 'A', 'address': 'Vancouver', 'latitude': 49.28, 'longitude': -123.12},
+                        'destination': {'name': 'B', 'address': 'Burnaby', 'latitude': 49.25, 'longitude': -122.98}, 'scheduled': False}
+    def tearDown(self): pass
 
 if __name__ == '__main__':
     apply(DATABASE)

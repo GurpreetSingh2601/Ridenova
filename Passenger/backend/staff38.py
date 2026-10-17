@@ -13,9 +13,9 @@ from database import connect, is_postgres
 
 ROLES = ('OWNER', 'OPERATIONS', 'SUPPORT', 'FINANCE', 'COMPLIANCE')
 PERMS = {
-    'OWNER': {'overview','fleet.read','fleet.write','documents.read','documents.write','finance.read','finance.write','support.read','support.write','ride.read','ride.write','staff.read','staff.write','audit.read'},
-    'OPERATIONS': {'overview','fleet.read','fleet.write','documents.read','documents.write','ride.read','ride.write','support.read','support.write'},
-    'SUPPORT': {'overview','ride.read','support.read','support.write'},
+    'OWNER': {'tracking.read','tracking.write','evidence.hold','overview','fleet.read','fleet.write','documents.read','documents.write','finance.read','finance.write','support.read','support.write','ride.read','ride.write','staff.read','staff.write','audit.read'},
+    'OPERATIONS': {'tracking.read','tracking.write','evidence.hold','overview','fleet.read','fleet.write','documents.read','documents.write','ride.read','ride.write','support.read','support.write'},
+    'SUPPORT': {'tracking.read','overview','ride.read','support.read','support.write'},
     'FINANCE': {'overview','finance.read','ride.read'},
     'COMPLIANCE': {'overview','fleet.read','documents.read','documents.write','audit.read'},
 }

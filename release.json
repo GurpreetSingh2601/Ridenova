@@ -1,39 +1,35 @@
 {
-  "build": 43,
+  "build": 44,
   "status": "staging-candidate",
-  "date": "2026-10-04",
+  "date": "2026-10-08",
   "passenger": {
-    "versionName": "0.35-build43",
-    "versionCode": 46
+    "versionName": "0.36-build44",
+    "versionCode": 47
   },
   "driver": {
-    "versionName": "0.20-build43",
-    "versionCode": 42
+    "versionName": "0.21-build44",
+    "versionCode": 43
   },
-  "api": "43",
-  "admin": "0.10.0",
+  "api": "44",
+  "admin": "0.11.0",
   "sharedBackend": "Passenger/backend",
   "deployed": false,
   "publicLaunchApproved": false,
   "pendingGates": [
-    "real-device-acceptance",
-    "authorized-render-deployment-of-43",
-    "hosted-performance",
-    "stripe-test-provider-recheck"
+    "android-passenger-and-driver-compilation",
+    "postgresql-integration-and-restore",
+    "admin-browser-current-rerun",
+    "physical-device-and-live-maps-acceptance",
+    "scope-boundaries-see-BUILD_44_SCOPE_STATUS.md"
   ],
-  "revision": "43",
+  "revision": "44",
   "verified": {
-    "backendTests": 164,
-    "postgresTests": 23,
-    "postgresEvidence": "earlier-executed-run; see verification/build43-postgres-results.md",
-    "adminBrowser": "9 workspaces; 5 roles; desktop/mobile; session recovery; pickup/no-show details",
-    "databaseMigrationAdded": false,
-    "android": [
-      "Passenger assembleDebug: passed",
-      "Passenger assembleStaging: passed",
-      "Driver assembleDebug: passed",
-      "Driver assembleStaging: passed"
-    ],
-    "backendEvidence": "verification/build43-portable-tests.txt"
+    "backendTests": 185,
+    "build44TargetedTests": 21,
+    "adminSourceChecks": true,
+    "androidSourcePreflight": true,
+    "migrations001to003Unchanged": true,
+    "androidCompiled": false,
+    "postgresRuntime": false
   }
 }

@@ -34,19 +34,23 @@ import kotlinx.coroutines.cancelChildren
 import org.json.JSONObject
 
 /**
- * Build 23 foreground location service.
+ * Foreground location service with Build 44 trip evidence recovery.
  *
  * While a development driver is online, this service continues publishing the latest GPS position
  * even if the Driver activity is backgrounded (for example, while Google Maps navigation is open).
  * The backend associates presence with an assigned ride and exposes it to the passenger app.
  */
 class DriverLocationService : Service() {
+    private var evidenceRideId: String? = null
+    private val gpsQueue by lazy { TripGpsQueue44(this, com.ridenova.driver.data.FleetCredentials(this).load()) }
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val client by lazy { LocationServices.getFusedLocationProviderClient(this) }
     private var callback: LocationCallback? = null
     private var publishJob: Job? = null
     private var api: DriverHttpApi? = null
     private var offerJob: Job? = null
+    private var lastCheckInPoll = 0L
+    private var pickupCheckIn = "NONE"
     private var notifiedLease: String? = null
     private val overlay by lazy { DriverOverlay(this) }
 
@@ -110,13 +114,14 @@ class DriverLocationService : Service() {
             override fun onLocationResult(result: LocationResult) {
                 val location = result.lastLocation ?: return
                 val transport = api ?: return
+                val point = JSONObject().put("latitude", location.latitude).put("longitude", location.longitude)
+                    .put("observedAtEpochMs", location.time).put("accuracyMeters", location.accuracy.toDouble())
+                evidenceRideId?.let { point.put("rideId", it); gpsQueue.add(point) }
                 if (publishJob?.isActive == true) return
                 publishJob = scope.launch {
                     try {
-                        transport.json("POST", "v1/driver/location", JSONObject()
-                            .put("latitude", location.latitude)
-                            .put("longitude", location.longitude)
-                            .put("recordedAtEpochMs", System.currentTimeMillis()))
+                        if (evidenceRideId != null) gpsQueue.flush(transport)
+                        else transport.json("POST", "v1/driver/location", point)
                     } catch (ex: kotlinx.coroutines.CancellationException) { throw ex }
                     catch (ex: com.ridenova.driver.data.DriverApiException) {
                         if (ex.status == 401 || (ex.status == 409 && ex.code == "DRIVER_OFFLINE")) { stopForeground(STOP_FOREGROUND_REMOVE); stopSelf() }
@@ -148,11 +153,19 @@ class DriverLocationService : Service() {
                     val transport = api ?: break
                     val status = transport.json("GET", "v1/driver/status")
                     consecutiveFailures = 0
+                    evidenceRideId = status.optString("activeRideId").takeIf { it.isNotBlank() && it != "null" }
+                    gpsQueue.flush(transport)
                     val active = status.optString("activeRideId").let { it.isNotBlank() && it != "null" }
                     if (!status.optBoolean("online") && !active) {
                         withContext(Dispatchers.Main) { overlay.hide(); DriverAlerts.clear(this@DriverLocationService); stopForeground(STOP_FOREGROUND_REMOVE); stopSelf() }
                         break
                     }
+                    if (active && System.currentTimeMillis()-lastCheckInPoll>10_000L) {
+                        lastCheckInPoll=System.currentTimeMillis()
+                        try { pickupCheckIn=transport.json("GET","v3/operations/driver/rides/$evidenceRideId/check-in").optString("state") }
+                        catch (e:kotlinx.coroutines.CancellationException) { throw e }
+                        catch (_:Exception) { pickupCheckIn="NONE" }
+                    } else if (!active) pickupCheckIn="NONE"
                     val offer = if (!active) transport.json("GET", "v1/driver/requests/current") else JSONObject()
                     val expires = offer.optLong("expiresAtEpochMs", 0L)
                     val valid = offer.optString("id").isNotBlank() && expires > System.currentTimeMillis()
@@ -167,6 +180,7 @@ class DriverLocationService : Service() {
                         }
                         overlay.update(valid && !locked)
                         val text = when {
+                            active && pickupCheckIn in setOf("CHECK_IN","ESCALATED") -> "Pickup check-in · respond when safely stopped"
                             active -> "Trip in progress · tap to return"
                             status.optString("dispatchReason") == "LOCATION_STALE" -> "GPS is stale · waiting for location"
                             status.optString("dispatchReason") == "LOCATION_REQUIRED" -> "Waiting for GPS · keep location enabled"

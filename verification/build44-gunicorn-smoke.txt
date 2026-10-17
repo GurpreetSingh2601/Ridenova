@@ -1,0 +1,1 @@
+PASS: two-worker Gunicorn HTTP health, Admin CSP, sign-in, authenticated access and persisted session after process restart (SQLite).
