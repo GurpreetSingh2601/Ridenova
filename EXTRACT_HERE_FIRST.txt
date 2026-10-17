@@ -1,4 +1,1 @@
-RIDENOVA BUILD 43 — PICKUP AND TRIP RELIABILITY
-Extract RN43 directly under G:\RideNova or C:\RideNova to keep paths short.
-Open START_HERE_BUILD_43.md. Keep your existing repository, private configuration, signing keys, Render services and database.
-This ZIP contains source, not an APK configured for your account.
+Extract into a short folder such as G:\RideNova\Release44. Open RN44/START_HERE_BUILD_44.md. Keep the same repository, database, credentials and private Android settings.

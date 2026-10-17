@@ -1,0 +1,4 @@
+001_build40_baseline.sql unchanged: 16edffd1ac16dea2fd0bfd740bff7d94ac760dbd26c983fc08c404f577f5bdc2
+002_staging_operations.sql unchanged: c75c93ea1ef71b98a16e0b705cfbfb2fb8497eeba75c2934ffbd89fcabc451d2
+003_build42_finance_boost.sql unchanged: 45f2d0ad38ded1cdc4a13c7fbe893498458a65268adc350ab554029aa9bd04dd
+PASS: migrations 001–003 are byte-identical to delivered Build 43.

@@ -663,6 +663,7 @@ fun RideNovaApp(
                     }
                 }
             } else MatchingScreen(
+                safetyClient = services.httpClient,
                 trip = trip,
                 backendMode = services.environment.backendConfigured,
                 repository = repository,
@@ -2109,6 +2110,7 @@ private fun FareRows(option: RideOption) {
 
 @Composable
 private fun MatchingScreen(
+    safetyClient: com.ridenova.passenger.data.RideNovaHttpClient,
     backendMode: Boolean,
     repository: RideNovaRepository,
     syncError: String?,
@@ -2371,6 +2373,7 @@ private fun MatchingScreen(
                 trip.driver?.let { driver ->
                     if (trip.status in setOf(TripStatus.DRIVER_ASSIGNED, TripStatus.DRIVER_ARRIVED, TripStatus.TRIP_STARTED)) {
                         DriverCard(driver = driver, pin = trip.pin, status = trip.status)
+                        if (backendMode) TripSafety44(trip.id, safetyClient)
                         Spacer(Modifier.height(14.dp))
                     }
                 }

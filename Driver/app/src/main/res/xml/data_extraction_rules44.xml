@@ -1,0 +1,1 @@
+<data-extraction-rules><cloud-backup><exclude domain="sharedpref" path="gps_queue44.xml" /></cloud-backup><device-transfer><exclude domain="sharedpref" path="gps_queue44.xml" /></device-transfer></data-extraction-rules>

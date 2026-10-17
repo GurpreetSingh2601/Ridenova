@@ -7,11 +7,12 @@ const vm = require('node:vm');
 const htmlPath = path.join(__dirname, '..', 'Passenger', 'backend', 'admin', 'index.html');
 const html = fs.readFileSync(htmlPath, 'utf8');
 const scripts = [...html.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/g)].map(match => match[1]);
-assert.equal(scripts.length, 7, 'seven Admin scripts must ship');
+assert.equal(scripts.length, 9, 'seven inline and two external Admin scripts must ship');
+for(const name of ['map44.js','operations44.js']) new vm.Script(fs.readFileSync(path.join(path.dirname(htmlPath),'assets',name),'utf8'),{filename:name});
 scripts.forEach((source, index) => new vm.Script(source, {filename: `admin-inline-${index + 1}.js`}));
 
 for (const label of ['Dashboard', 'Rides', 'Drivers / Fleet', 'Support', 'Finance',
-                     'Staff & Access', 'Audit Logs', 'BUILD 43', 'ADMIN v0.10.0']) {
+                     'Staff & Access', 'Audit Logs', 'BUILD 44', 'ADMIN v0.11.0']) {
   assert.ok(html.includes(label), `missing ${label}`);
 }
 for (const id of ['staff-workspace', 'audit-workspace', 'staff-create-form', 'staff-login',

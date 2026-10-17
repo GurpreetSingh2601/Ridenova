@@ -75,11 +75,12 @@ fun FleetDocuments(onBack: () -> Unit) {
     Column(Modifier.fillMaxSize().imePadding().verticalScroll(rememberScrollState()).padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         TextButton(onClick = onBack) { Text("Back to account") }
         NovaSection("Ready to drive","Submit your documents and follow their review status.")
-        val approved=rows.count { it.optString("status")=="APPROVED" && !it.optBoolean("expired") }
-        if(rows.isNotEmpty()) { Text("$approved of ${rows.size} documents approved",style=MaterialTheme.typography.titleMedium);LinearProgressIndicator(progress={approved.toFloat()/rows.size},modifier=Modifier.fillMaxWidth()) }
+        val requiredRows=rows.filter { it.optBoolean("required", true) }
+        val approved=requiredRows.count { it.optString("status")=="APPROVED" && !it.optBoolean("expired") }
+        if(requiredRows.isNotEmpty()) { Text("$approved of ${requiredRows.size} required documents approved",style=MaterialTheme.typography.titleMedium);LinearProgressIndicator(progress={approved.toFloat()/requiredRows.size},modifier=Modifier.fillMaxWidth()) }
         DriverDocumentStatus(status)
         if (status == "Loading…" && error == null) LinearProgressIndicator(Modifier.fillMaxWidth())
-        Text("Four approved, unexpired documents and admin approval are needed to receive requests. Use sample files only; this is a development review workflow.")
+        Text("All required documents must be approved and unexpired, with admin approval, to receive requests. Use sample files only; this is a development review workflow.")
         val expiringSoon = rows.filter { doc ->
             val expiryDate = runCatching { java.time.LocalDate.parse(doc.optString("expiryDate")) }.getOrNull()
             expiryDate != null && !expiryDate.isAfter(java.time.LocalDate.now().plusDays(30))
@@ -102,17 +103,33 @@ fun FleetDocuments(onBack: () -> Unit) {
         rows.forEach { doc ->
             Card(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(18.dp),verticalArrangement=Arrangement.spacedBy(6.dp)) {
-                    Text(doc.getString("kind").lowercase().replaceFirstChar { it.titlecase() }, style = MaterialTheme.typography.titleMedium)
+                    Text(doc.getString("kind").replace("_", " ").lowercase().replaceFirstChar { it.titlecase() }, style = MaterialTheme.typography.titleMedium)
                     Text(doc.getString("status") + if (doc.optBoolean("expired")) " · EXPIRED" else "")
                     Text("Expiry: " + doc.optString("expiryDate", "Not set"))
                     val note = doc.optString("note").takeUnless { it == "null" || it.isBlank() }
                     note?.let { Text("Reviewer: $it") }
+                    Text(if(doc.optBoolean("required",true)) "Required to drive" else "Additional review document")
+                    if(doc.optString("filename").let{it.isNotBlank()&&it!="null"}) TextButton(enabled=!busy,onClick={scope.launch {
+                        busy=true
+                        try {
+                            val content=api.json("GET","v3/operations/driver/documents/"+doc.getString("kind"))
+                            val dir=java.io.File(context.cacheDir,"documents44").apply{mkdirs()}
+                            dir.listFiles()?.forEach{it.delete()}
+                            val mime=content.getString("mime")
+                            val ext=when(mime){"application/pdf"->"pdf";"image/png"->"png";else->"jpg"}
+                            val file=java.io.File(dir,"document.$ext")
+                            withContext(Dispatchers.IO){file.writeBytes(Base64.decode(content.getString("contentBase64"),Base64.DEFAULT))}
+                            val uri=androidx.core.content.FileProvider.getUriForFile(context,context.packageName+".documents",file)
+                            context.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW).setDataAndType(uri,mime).addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION))
+                        } catch(e:CancellationException){throw e} catch(e:android.content.ActivityNotFoundException){error="Install a PDF/image viewer to open this document."} catch(e:Exception){error=e.localizedMessage} finally{busy=false}
+                    }}){Text("View submitted document")}
+
                 }
             }
         }
         Text("Submit or replace a document", style = MaterialTheme.typography.titleMedium)
-        listOf("LICENCE", "INSURANCE", "REGISTRATION", "INSPECTION").forEach { item ->
-            FilterChip(selected = kind == item, onClick = { kind = item }, enabled = !busy, label = { Text(item.lowercase().replaceFirstChar { it.titlecase() }) })
+        listOf("LICENCE", "INSURANCE", "REGISTRATION", "INSPECTION", "RECORD_CHECK_CERTIFICATE", "DRIVING_RECORD", "CRIMINAL_RECORD_CHECK").forEach { item ->
+            FilterChip(selected = kind == item, onClick = { kind = item }, enabled = !busy, label = { Text(item.replace("_", " ").lowercase().replaceFirstChar { it.titlecase() }) })
         }
         OutlinedTextField(expiry, { expiry = it }, modifier = Modifier.fillMaxWidth(), label = { Text("Expiry · YYYY-MM-DD") }, enabled = !busy, singleLine = true)
         Text("PDF, PNG or JPEG · maximum 2 MiB. Replacing a document takes you offline until it is reviewed. Finish an active trip first.")

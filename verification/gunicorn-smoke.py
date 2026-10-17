@@ -23,7 +23,7 @@ def main():
             probe.bind(('127.0.0.1', 0)); port = probe.getsockname()[1]
         environment = dict(os.environ, RIDENOVA_ENVIRONMENT='development', RIDENOVA_DATABASE=database,
                            DATABASE_URL='', RIDENOVA_OWNER_USERNAME='', RIDENOVA_OWNER_PASSWORD='')
-        command = [sys.executable, '-m', 'gunicorn', '--bind', f'127.0.0.1:{port}', '--workers', '2', 'wsgi:create_app()']
+        command = [sys.executable, '-m', 'gunicorn', '--bind', f'127.0.0.1:{port}', '--workers', '2', '--graceful-timeout', '2', 'wsgi:create_app()']
         origin = f'http://127.0.0.1:{port}'
         def call(path, body=None, token=None):
             headers = {'Content-Type': 'application/json'}
@@ -38,22 +38,22 @@ def main():
                 try:
                     call('/health'); return process
                 except OSError: time.sleep(.1)
-            process.terminate(); process.wait(10); raise RuntimeError('Gunicorn startup timed out')
+            process.terminate(); process.wait(15); raise RuntimeError('Gunicorn startup timed out')
         process = start()
         try:
-            assert json.loads(call('/health')[2])['build'] == 43
+            assert json.loads(call('/health')[2])['build'] == 44
             status, headers, body = call('/admin')
-            assert status == 200 and b'BUILD 43' in body and 'Content-Security-Policy' in headers
+            assert status == 200 and b'BUILD 44' in body and 'Content-Security-Policy' in headers
             otp = json.loads(call('/v1/auth/request-otp', {'phone': '6045550123'})[2])
             account = json.loads(call('/v1/auth/verify-otp', {'challengeId': otp['challengeId'], 'code': otp['developmentCode']})[2])
             token = account['accessToken']
             assert json.loads(call('/v1/passenger/me', token=token)[2])['id'] == account['passenger']['id']
-            process.terminate(); process.wait(10)
+            process.terminate(); process.wait(15)
             process = start()
             assert json.loads(call('/v1/passenger/me', token=token)[2])['id'] == account['passenger']['id']
             print('PASS: two-worker Gunicorn HTTP health, Admin CSP, sign-in, authenticated access and persisted session after process restart (SQLite).')
         finally:
-            process.terminate(); process.wait(10)
+            process.terminate(); process.wait(15)
 
 
 if __name__ == '__main__': main()

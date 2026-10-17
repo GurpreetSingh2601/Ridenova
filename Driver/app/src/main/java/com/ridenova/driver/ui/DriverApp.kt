@@ -60,7 +60,7 @@ import java.text.NumberFormat
 import java.util.Locale
 
 private enum class DriverTab(val label: String) {
-    HOME("Home"), EARNINGS("Earnings"), HISTORY("Trips"), ACCOUNT("Account"), ALERTS("Alerts & shortcut")
+    HOME("Home"), EARNINGS("Earnings"), HISTORY("Trips"), ACCOUNT("Account"), ALERTS("Alerts & shortcut"), INBOX("Inbox")
 }
 
 @Composable
@@ -118,6 +118,7 @@ fun RideNovaDriverApp(locationGranted: Boolean, viewModel: DriverViewModel = vie
                                 DriverTab.EARNINGS -> Icons.Default.Payments
                                 DriverTab.HISTORY -> Icons.Default.ReceiptLong
                                 DriverTab.ACCOUNT -> Icons.Default.Person
+                                DriverTab.INBOX -> Icons.Default.Notifications
                                 DriverTab.ALERTS -> Icons.Default.Notifications
                             }, null) },
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
@@ -160,6 +161,7 @@ fun RideNovaDriverApp(locationGranted: Boolean, viewModel: DriverViewModel = vie
                     DriverTab.EARNINGS -> EarningsScreen(state,trips) { selectedTrip=it;selectedTab=DriverTab.HISTORY }
                     DriverTab.HISTORY -> selectedTrip?.let { DriverTripDetailScreen(it) { selectedTrip = null } }
                         ?: TripHistoryScreen(trips, { selectedTab = DriverTab.HOME }, { selectedTrip = it })
+                    DriverTab.INBOX -> DriverInbox44()
                     DriverTab.ALERTS -> DriverAlertSettings()
                     DriverTab.ACCOUNT -> {
                         if (documents) FleetDocuments(onBack = { documents = false })
@@ -273,6 +275,7 @@ private fun DriverMap(state: DriverUiState, bottomInset: Dp = 0.dp, topInset: Dp
                 if (preview) ride.pickup else currentPosition,
                 if (preview || dropoff) ride.destination else ride.pickup)
             route = main.getOrNull()
+            if (!preview && state.remoteMode) route?.let { saveRoute44(context, ride.id, it, dropoff) }
             val pickupResult = pickup?.await()
             pickupRoute = pickupResult?.getOrNull()
             routeFailed = main.isFailure || pickupResult?.isFailure == true
@@ -546,6 +549,7 @@ private fun ActiveRideCard(
             verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text(title,style=MaterialTheme.typography.titleLarge,fontWeight=FontWeight.Bold,modifier=Modifier.semantics { liveRegion=LiveRegionMode.Polite })
             Text(destinationText, style = MaterialTheme.typography.bodyLarge)
+            if (state.remoteMode) PickupCheckIn44(ride.id)
             if (ride.pickupNotes.isNotBlank()) NovaNotice("Pickup instructions", ride.pickupNotes)
             if (state.rideStage == RideStage.ARRIVED && state.remoteMode) WaitingCard43(ride.id, onNoShowComplete)
             state.connectionError?.let { DriverNotice("Trip update failed", it, true) }
@@ -1073,6 +1077,7 @@ private fun DriverNavigationScreen(state: DriverUiState, onExit: () -> Unit, onO
                 onSuccess = { route = it; error = null },
                 onFailure = { error = it.message ?: "Routes unavailable" }
             )
+            if (state.remoteMode) route?.let { saveRoute44(context, ride.id, it, state.rideStage == RideStage.ON_TRIP) }
             loading = false
             delay(30_000)
         }

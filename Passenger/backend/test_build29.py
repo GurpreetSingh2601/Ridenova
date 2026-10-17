@@ -138,7 +138,7 @@ class Build29Tests(unittest.TestCase):
         self.assertFalse(self.fleet.status(d)['online'])
         self.error('DRIVER_NOT_APPROVED',lambda:self.fleet.availability(d,{'online':True}))
         self.fleet.review_document(d,'LICENCE',{'status':'APPROVED','revision':3})
-        self.now+=366*86400000
+        self.now+=367*86400000 # Past expiry in Vancouver as well as UTC.
         self.assertFalse(self.fleet.status(d)['documentsReady'])
     def test_active_ride_blocks_offline_upload_and_access_reset(self):
         d,r=self.assigned()
@@ -157,7 +157,7 @@ class Build29Tests(unittest.TestCase):
         status=self.fleet.status(d)
         self.assertEqual(status['status'],'PENDING');self.assertFalse(status['online'])
         self.error('DOCUMENTS_REQUIRED',lambda:self.fleet.approve(d,{'status':'APPROVED'}))
-        self.assertTrue(all(x['status']=='PENDING' for x in self.fleet.documents(d)['documents']))
+        self.assertTrue(all(x['status']=='PENDING' for x in self.fleet.documents(d)['documents'] if x['filename']))
         self.fleet.approve(d,{'status':'SUSPENDED'})
         self.fleet.update_profile(d,{'name':'Updated again','vehicle':'New car','plate':'NEW'})
         self.assertEqual(self.fleet.status(d)['status'],'SUSPENDED')

@@ -1,4 +1,4 @@
-"""Dependency-free Build 43 Admin HTML structure and JavaScript syntax preflight."""
+"""Dependency-free Build 44 Admin HTML structure and JavaScript syntax preflight."""
 from html.parser import HTMLParser
 from pathlib import Path
 import re
@@ -53,7 +53,7 @@ def main():
     duplicates = sorted({item for item in parser.ids if parser.ids.count(item) > 1})
     assert not duplicates, f'Duplicate Admin IDs: {duplicates}'
     for text in ('Dashboard', 'Rides', 'Drivers / Fleet', 'Support', 'Finance',
-                 'Staff & Access', 'Audit Logs', 'BUILD 43', 'ADMIN v0.10.0'):
+                 'Staff & Access', 'Audit Logs', 'BUILD 44', 'ADMIN v0.11.0'):
         assert text in source, f'Missing Admin navigation/release label: {text}'
     assert 'BUILD 35 · ADMIN' not in source.upper()
     assert 'window.loadPagedRides=async function' in source

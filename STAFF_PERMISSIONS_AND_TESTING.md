@@ -1,4 +1,4 @@
-# Build 42.1 staff permissions and testing
+# Build 44 staff permissions and testing
 
 The backend is authoritative. The Admin portal exposes workspaces appropriate to the signed-in role, and every request is independently authorized server-side.
 
@@ -95,3 +95,18 @@ This pass does not create Passenger/Driver public signup or new staff roles. Own
 ## Build 43 additions
 
 Existing ride-read permissions also govern pickup instructions, no-show reason and waiting metadata. No role is broadened. Test Owner/Operations/Support/Finance ride views and the Compliance restriction; test text escaping of notes. No-show mutation is only available to the assigned authenticated driver, not a new staff override. Zero no-show fees/earnings must not appear as a completed earning.
+
+## Build 44 endpoints
+
+| `/v3/operations/` path | Permission | Roles |
+|---|---|---|
+| admin/live; admin/rides/{id}/evidence GET | tracking.read | Owner, Operations, Support |
+| admin/rides/{id}/reassign POST | tracking.write | Owner, Operations |
+| admin/rides/{id}/hold POST | evidence.hold | Owner, Operations |
+| admin/document-policy GET / POST | documents.read / documents.write | Owner, Operations, Compliance |
+| admin/documents/{driver}/{kind}/versions or /{revision} GET | documents.read | Owner, Operations, Compliance; audited |
+| driver/inbox, driver/documents/{kind}, driver/rides/{id}/check-in or /route | Own authenticated invited driver | Cannot access another driver's trip/document |
+| passenger/rides/{id}/consent, /location, /share | Own authenticated invited passenger | Active-trip and consent checks |
+| public-share POST | Valid random bearer link | Expiring driver/destination subset only |
+
+Finance does not gain tracking access; existing address summaries remain unchanged. Support gets read-only Live operations. Compliance cannot read GPS or reassign. Test server deny paths directly, logout with evidence open, disabled/expired sessions and staff switching. UI visibility is not authorization.

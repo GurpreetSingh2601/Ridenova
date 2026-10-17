@@ -125,17 +125,17 @@ class RemoteDriverRepository(context: Context, url: String, token: String, priva
             draft.optJSONObject("routeEstimate")).copy(pickupNotes = draft.optString("pickupNotes", ""), rider = Rider("rider", json.optString("riderName", "Rider"), 0.0, 0)) to stage
     }
 
-    suspend fun publishPresence(point: LatLng) {
+    suspend fun publishPresence(point: LatLng, observedAt: Long, accuracy: Double) {
         api.json("POST", "v1/driver/location", JSONObject()
             .put("latitude", point.latitude).put("longitude", point.longitude)
-            .put("recordedAtEpochMs", System.currentTimeMillis()))
+            .put("observedAtEpochMs", observedAt).put("accuracyMeters", accuracy))
     }
 
-    suspend fun publish(rideId: String, point: LatLng) {
+    suspend fun publish(rideId: String, point: LatLng, observedAt: Long, accuracy: Double) {
         require(rideId.matches(Regex("[A-Za-z0-9_-]+")))
-        api.json("POST", "v1/driver/rides/$rideId/location", JSONObject()
+        api.json("POST", "v1/driver/location", JSONObject().put("rideId", rideId)
             .put("latitude", point.latitude).put("longitude", point.longitude)
-            .put("recordedAtEpochMs", System.currentTimeMillis()))
+            .put("observedAtEpochMs", observedAt).put("accuracyMeters", accuracy))
     }
 
     private fun offer(json: JSONObject) = RideRequest(

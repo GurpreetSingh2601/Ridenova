@@ -1,4 +1,4 @@
-"""RideNova Build 43 shared API. Python 3.11+.
+"""RideNova Build 44 shared API. Python 3.11+.
 
 This CLI is loopback development only; staging uses wsgi.py with Gunicorn.
 The displayed development OTP does not prove ownership of a real phone number.
@@ -148,8 +148,10 @@ class Service:
         self._components()
 
     def _components(self):
-        from fleet35 import Fleet
+        from fleet44 import Fleet
         self.fleet = Fleet(self)
+        from operations44 import Operations
+        self.operations44 = Operations(self)
         from experience34 import Experience
         self.experience = Experience(self)
         from finance42 import Finance
@@ -645,6 +647,8 @@ class Service:
         return response
 
     def event(self, db, ride, actor, event_type):
+        if hasattr(self,"operations44"):
+            self.operations44.evidence(db,ride,actor,"LIFECYCLE_"+event_type,{"status":ride["status"],"driverId":ride.get("fleetDriverId")})
         db.execute('INSERT INTO events(ride_id,at_ms,actor,type,payload) VALUES (?,?,?,?,?)',
                    (ride['id'], self.clock(), actor, event_type,
                     json.dumps({'status': ride['status'], 'cancellationFeeCad': ride['cancellationFeeCad'],
@@ -1189,13 +1193,23 @@ def make_handler(service):
                     path.startswith('/v1/admin/rides/') and path.endswith(('/transition', '/driver-position'))):
                     fail(403, 'DEVELOPMENT_ONLY', 'Unavailable in staging; contact the test administrator')
                 body = {}
-                if path == '/admin' and self.command == 'GET':
-                    html = Path(__file__).with_name('admin').joinpath('index.html').read_bytes()
+                if path == '/map-config' and self.command == 'GET':
+                    data=json.dumps({'browserKey': os.environ.get('RIDENOVA_MAPS_BROWSER_KEY', '').strip()}).encode()
+                    self.send_response(200); self.send_header('Content-Type','application/json'); self.send_header('Cache-Control','no-store'); self.send_header('Content-Length',str(len(data))); self.end_headers(); self.wfile.write(data)
+                    return
+                if path.startswith('/admin/assets/') and self.command=='GET':
+                    name=path.removeprefix('/admin/assets/')
+                    if name not in ('map44.js','operations44.js'):fail(404,'NOT_FOUND','Asset not found')
+                    data=Path(__file__).with_name('admin').joinpath('assets',name).read_bytes()
+                    self.send_response(200);self.send_header('Content-Type','text/javascript' if name.endswith('.js') else 'text/css' if name.endswith('.css') else 'text/plain')
+                    self.send_header('Content-Length',str(len(data)));self.send_header('X-Content-Type-Options','nosniff');self.end_headers();self.wfile.write(data);return
+                if path in ('/admin','/share') and self.command=='GET':
+                    html=Path(__file__).with_name('admin').joinpath('index.html' if path=='/admin' else 'share.html').read_bytes()
                     if staging:
                         html = html.replace(b'class="tag">Development</span>', b'class="tag">STAGING - invited tests only</span>')
                     self.send_response(200)
                     self.send_header('Content-Type', 'text/html; charset=utf-8')
-                    self.send_header('Content-Security-Policy', "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'")
+                    self.send_header('Content-Security-Policy', "default-src 'none'; script-src 'self' 'unsafe-inline' https://maps.googleapis.com https://maps.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://*.googleapis.com https://*.gstatic.com https://*.google.com; connect-src 'self' https://*.googleapis.com https://*.gstatic.com https://*.google.com; worker-src blob:; frame-src https://www.google.com; base-uri 'none'; frame-ancestors 'none'")
                     self.send_header('Cache-Control', 'no-store')
                     self.send_header('X-Content-Type-Options', 'nosniff')
                     self.send_header('Content-Length', str(len(html)))
@@ -1229,8 +1243,11 @@ def make_handler(service):
                         fail(400, 'INVALID_JSON', 'Invalid JSON body')
                     if not isinstance(body, dict):
                         fail(400, 'INVALID_JSON', 'Expected JSON object')
-                if path == '/health' and self.command == 'GET':
-                    result = {'status': 'ok', 'version': '43', 'build': 43, 'releaseRevision': '43', 'developmentOnly': True,
+                if path.startswith('/v3/operations/'):
+                    from operations_api44 import dispatch
+                    result=dispatch(service,authorize_admin,self,path,body)
+                elif path == '/health' and self.command == 'GET':
+                    result = {'status': 'ok', 'version': '44', 'build': 44, 'releaseRevision': '44', 'developmentOnly': True,
                               'authentication': 'development-otp'}
                 elif path == '/v1/staff/login' and self.command == 'POST':
                     result = staff.login(body)
@@ -1279,6 +1296,7 @@ def make_handler(service):
                                 'documents.write' if path.endswith('/review') else 'fleet.write')
                     actor = authorize_admin(self.headers.get('Authorization',''),permission)
                     if self.command == 'POST': staff.record(actor, 'FLEET_ACTION_ATTEMPT', path)
+                    elif '/documents/' in path: staff.record(actor,'DOCUMENT_CONTENT_VIEW',path)
 
                     parts=path.split('/')
                     if path=='/v2/fleet/admin/drivers' and self.command=='GET':
@@ -1602,15 +1620,18 @@ if __name__ == '__main__':
     service = Service(args.database)
     stop = threading.Event()
     def scheduler():
+        last_maintenance=0
         while not stop.is_set():
             try:
                 service.activate_due()
+                if service.clock()-last_maintenance>=60000:
+                    service.operations44.maintain(); last_maintenance=service.clock()
             except Exception:
                 print('Development scheduler tick failed; it will retry. Inspect the database/server configuration.')
             stop.wait(5)
     worker = threading.Thread(target=scheduler, daemon=True)
     worker.start()
-    print(f'RideNova Build 43 / Admin v0.10.0 DEVELOPMENT ONLY on http://{args.host}:{args.port}; Trip Radar enabled; no real charges')
+    print(f'RideNova Build 44 / Admin v0.11.0 DEVELOPMENT ONLY on http://{args.host}:{args.port}; Trip Radar enabled; no real charges')
     server = ThreadingHTTPServer((args.host, args.port), make_handler(service))
     try:
         server.serve_forever()

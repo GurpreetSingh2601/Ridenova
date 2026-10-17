@@ -20,10 +20,14 @@ def main():
     stop = threading.Event()
     for sig in (signal.SIGTERM, signal.SIGINT):
         signal.signal(sig, lambda *_: stop.set())
+    last_maintenance=0
     while not stop.is_set():
         try:
             with request_lock(settings.database):
                 service.activate_due()
+                if service.clock()-last_maintenance>=60000:
+                    service.operations44.maintain()
+                    last_maintenance=service.clock()
                 heartbeat(settings.database)
             logging.info(json.dumps({'event': 'scheduler_tick', 'status': 'ok'}))
         except Exception as exc:
