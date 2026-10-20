@@ -1,0 +1,3 @@
+PASS: current Admin source structure, navigation, release labels and all inline JavaScript syntax.
+PASS: Compliance paginator clears stale ride data without requesting a forbidden endpoint.
+PASS: Admin HTML IDs/navigation are complete and all 7 shipped inline scripts pass Node syntax checks.

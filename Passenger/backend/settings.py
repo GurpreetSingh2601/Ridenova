@@ -22,7 +22,7 @@ class Settings:
         if name not in ('development', 'staging', 'production'):
             raise ValueError('Unknown RIDENOVA_ENVIRONMENT')
         if name == 'production':
-            raise ValueError('Public production is not enabled in Build 44; phone verification and launch gates remain')
+            raise ValueError('Public production is not enabled in Build 45; phone verification and launch gates remain')
         database = env.get('DATABASE_URL', '')
         if name == 'development':
             return cls(name, database or env.get('RIDENOVA_DATABASE', 'ridenova-dev.sqlite3'))

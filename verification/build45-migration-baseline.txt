@@ -1,0 +1,1 @@
+PASS: migrations 001–004 match Build 44 byte for byte. Migration 005 is additive. PostgreSQL runtime remains pending.

@@ -1,0 +1,3 @@
+Final direct command: python -m unittest discover -s Passenger/backend -p test_build45.py -v
+Result observed: Ran 18 tests in 2.477s — OK.
+Full scenario source: Passenger/backend/test_build45.py.

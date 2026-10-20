@@ -205,6 +205,10 @@ class Fleet(PreviousFleet):
                         continue
                     distance = self.service.distance_km(candidate[7], candidate[8],
                                                         pickup['latitude'], pickup['longitude'])
+                    if hasattr(self, 'dispatch_route'):
+                        road = self.dispatch_route(candidate, pickup)
+                        if road is None: continue
+                        distance = road['distanceMeters'] / 1000
                     choices.append((distance, candidate[0]))
                 # Radar is an account feature. Token-only compatibility drivers keep
                 # the previous deterministic exclusive queue used by older builds.

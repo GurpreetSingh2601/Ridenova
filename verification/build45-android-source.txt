@@ -1,0 +1,2 @@
+PASS: Android manifests parse; Kotlin/Gradle delimiters and Build 45 source invariants are valid.
+NOTE: This preflight does not replace Gradle compilation or real-device testing.

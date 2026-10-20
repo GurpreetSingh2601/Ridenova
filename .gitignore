@@ -18,3 +18,9 @@ import-report.json
 **/*.keystore
 **/*.p12
 **/*.pfx
+
+**/secrets.properties
+**/key.properties
+**/keystore.properties
+**/hs_err_*
+**/core.*

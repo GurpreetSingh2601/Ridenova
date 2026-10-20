@@ -1,4 +1,4 @@
-"""RideNova Build 44 shared API. Python 3.11+.
+"""RideNova Build 45 shared API. Python 3.11+.
 
 This CLI is loopback development only; staging uses wsgi.py with Gunicorn.
 The displayed development OTP does not prove ownership of a real phone number.
@@ -148,7 +148,7 @@ class Service:
         self._components()
 
     def _components(self):
-        from fleet44 import Fleet
+        from fleet45 import Fleet
         self.fleet = Fleet(self)
         from operations44 import Operations
         self.operations44 = Operations(self)
@@ -156,6 +156,10 @@ class Service:
         self.experience = Experience(self)
         from finance42 import Finance
         self.finance = Finance(self)
+        from routing45 import PickupRoutes
+        self.pickup_routes = PickupRoutes(self)
+        from compensation45 import Compensation
+        self.compensation = Compensation(self)
 
     @staticmethod
     def token_hash(value):
@@ -647,6 +651,8 @@ class Service:
         return response
 
     def event(self, db, ride, actor, event_type):
+        if hasattr(self, "compensation"):
+            self.compensation.lifecycle(db, ride, event_type)
         if hasattr(self,"operations44"):
             self.operations44.evidence(db,ride,actor,"LIFECYCLE_"+event_type,{"status":ride["status"],"driverId":ride.get("fleetDriverId")})
         db.execute('INSERT INTO events(ride_id,at_ms,actor,type,payload) VALUES (?,?,?,?,?)',
@@ -1199,7 +1205,7 @@ def make_handler(service):
                     return
                 if path.startswith('/admin/assets/') and self.command=='GET':
                     name=path.removeprefix('/admin/assets/')
-                    if name not in ('map44.js','operations44.js'):fail(404,'NOT_FOUND','Asset not found')
+                    if name not in ('map44.js','operations44.js','compensation45.js'):fail(404,'NOT_FOUND','Asset not found')
                     data=Path(__file__).with_name('admin').joinpath('assets',name).read_bytes()
                     self.send_response(200);self.send_header('Content-Type','text/javascript' if name.endswith('.js') else 'text/css' if name.endswith('.css') else 'text/plain')
                     self.send_header('Content-Length',str(len(data)));self.send_header('X-Content-Type-Options','nosniff');self.end_headers();self.wfile.write(data);return
@@ -1243,11 +1249,14 @@ def make_handler(service):
                         fail(400, 'INVALID_JSON', 'Invalid JSON body')
                     if not isinstance(body, dict):
                         fail(400, 'INVALID_JSON', 'Expected JSON object')
-                if path.startswith('/v3/operations/'):
+                if path.startswith('/v4/trips/'):
+                    from api45 import dispatch
+                    result=dispatch(service,authorize_admin,self,path,body)
+                elif path.startswith('/v3/operations/'):
                     from operations_api44 import dispatch
                     result=dispatch(service,authorize_admin,self,path,body)
                 elif path == '/health' and self.command == 'GET':
-                    result = {'status': 'ok', 'version': '44', 'build': 44, 'releaseRevision': '44', 'developmentOnly': True,
+                    result = {'status': 'ok', 'version': '45', 'build': 45, 'releaseRevision': '45', 'developmentOnly': True,
                               'authentication': 'development-otp'}
                 elif path == '/v1/staff/login' and self.command == 'POST':
                     result = staff.login(body)
@@ -1631,7 +1640,7 @@ if __name__ == '__main__':
             stop.wait(5)
     worker = threading.Thread(target=scheduler, daemon=True)
     worker.start()
-    print(f'RideNova Build 44 / Admin v0.11.0 DEVELOPMENT ONLY on http://{args.host}:{args.port}; Trip Radar enabled; no real charges')
+    print(f'RideNova Build 45 / Admin v0.12.0 DEVELOPMENT ONLY on http://{args.host}:{args.port}; Trip Radar enabled; no real charges')
     server = ThreadingHTTPServer((args.host, args.port), make_handler(service))
     try:
         server.serve_forever()

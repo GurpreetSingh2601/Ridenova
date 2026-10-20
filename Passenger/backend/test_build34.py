@@ -107,7 +107,7 @@ class Build34Tests(unittest.TestCase):
                 return error.code, json.load(error)
 
         try:
-            self.assertEqual(call('/health')[1]['version'], '44')
+            self.assertEqual(call('/health')[1]['version'], '45')
             code, result = call(f'/v1/passenger/rides/{ride}/rating', 'POST',
                                 {'stars': 5, 'tags': ['SAFE_DRIVING'], 'comment': 'Great'}, token)
             self.assertEqual(code, 200)

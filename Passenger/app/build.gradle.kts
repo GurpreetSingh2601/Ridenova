@@ -16,8 +16,8 @@ android {
         applicationId = "com.ridenova.passenger"
         minSdk = 26
         targetSdk = 36
-        versionCode = 47
-        versionName = "0.36-build44"
+        versionCode = 48
+        versionName = "0.37-build45"
 
         // v0.14 backend-ready environment hooks. These are intentionally non-secret.
         buildConfigField("String", "RIDENOVA_ENVIRONMENT", "\"development\"")

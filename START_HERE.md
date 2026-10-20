@@ -1,3 +1,3 @@
-# RideNova Build 44
+# RideNova Build 45
 
-Read START_HERE_BUILD_44.md first. It is the current setup/migration guide. Historical notes are under docs/history.
+Read START_HERE_BUILD_45.md first. This is a staging source candidate, not a public-launch release.

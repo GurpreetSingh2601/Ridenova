@@ -1,35 +1,37 @@
 {
-  "build": 44,
+  "build": 45,
   "status": "staging-candidate",
-  "date": "2026-10-08",
+  "date": "2026-10-20",
   "passenger": {
-    "versionName": "0.36-build44",
-    "versionCode": 47
+    "versionName": "0.37-build45",
+    "versionCode": 48
   },
   "driver": {
-    "versionName": "0.21-build44",
-    "versionCode": 43
+    "versionName": "0.22-build45",
+    "versionCode": 44
   },
-  "api": "44",
-  "admin": "0.11.0",
+  "api": "45",
+  "admin": "0.12.0",
   "sharedBackend": "Passenger/backend",
   "deployed": false,
   "publicLaunchApproved": false,
+  "revision": "45",
   "pendingGates": [
     "android-passenger-and-driver-compilation",
     "postgresql-integration-and-restore",
-    "admin-browser-current-rerun",
+    "admin-browser-regression",
     "physical-device-and-live-maps-acceptance",
-    "scope-boundaries-see-BUILD_44_SCOPE_STATUS.md"
+    "server-routing-credential-setup",
+    "qualified-payroll-and-distance-review-policy"
   ],
-  "revision": "44",
   "verified": {
-    "backendTests": 185,
-    "build44TargetedTests": 21,
+    "backendTests": 203,
+    "build45TargetedTests": 18,
     "adminSourceChecks": true,
     "androidSourcePreflight": true,
-    "migrations001to003Unchanged": true,
+    "migrations001to004Unchanged": true,
     "androidCompiled": false,
-    "postgresRuntime": false
+    "postgresRuntime": false,
+    "adminBrowserPassed": false
   }
 }

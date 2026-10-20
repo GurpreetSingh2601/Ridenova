@@ -200,6 +200,8 @@ class Finance:
         self._ledger(db,'fare:'+ride['id'],ride['id'],ride.get('fleetDriverId'),'FARE_GROSS',b['totalCents'])
         self._ledger(db,'commission:'+ride['id'],ride['id'],ride.get('fleetDriverId'),'PLATFORM_COMMISSION',b['platformCommissionCents'])
         self._ledger(db,'driver:'+ride['id'],ride['id'],ride.get('fleetDriverId'),'DRIVER_GROSS',b['driverGrossBeforeCostsCents'])
+        if db.execute('SELECT 1 FROM engagements45 WHERE ride_id=?',(ride['id'],)).fetchone():
+            return  # Build 45 acceptance reservation is settled by the lifecycle transaction.
         driver = ride.get('fleetDriverId')
         pickup = ride.get('draft',{}).get('pickup',{})
         lat, lng = pickup.get('latitude'),pickup.get('longitude')
@@ -255,7 +257,7 @@ class Finance:
             entries=db.execute('SELECT entry_key,ride_id,driver_id,kind,amount_cents,at_ms FROM finance_entries ORDER BY at_ms DESC LIMIT 200').fetchall()
             payments=db.execute('SELECT ride_id,amount_cents,status FROM sandbox_payments ORDER BY updated_ms DESC LIMIT 100').fetchall()
             refunds=db.execute('SELECT ride_id,request_key,amount_cents,status FROM sandbox_refunds ORDER BY created_ms DESC LIMIT 100').fetchall()
-            balances=db.execute("SELECT driver_id,COALESCE(SUM(amount_cents),0) FROM finance_entries WHERE driver_id IS NOT NULL AND kind IN ('DRIVER_GROSS','PLATFORM_FUNDED_BOOST') GROUP BY driver_id ORDER BY driver_id LIMIT 200").fetchall()
+            balances=db.execute("SELECT driver_id,COALESCE(SUM(amount_cents),0) FROM finance_entries WHERE driver_id IS NOT NULL AND kind IN ('DRIVER_GROSS','PLATFORM_FUNDED_BOOST','MINIMUM_WAGE_TOPUP') GROUP BY driver_id ORDER BY driver_id LIMIT 200").fetchall()
         return {'testOnly':True,'providerConfigured':self.available(),
                 'entries':[dict(zip(('key','rideId','driverId','kind','amountCents','atMs'),e)) for e in entries],
                 'payments':[dict(zip(('rideId','amountCents','status'),p)) for p in payments],

@@ -33,6 +33,7 @@ class RemoteDriverRepository(context: Context, url: String, token: String, priva
                 // Never surface coroutine cancellation as a server error to the driver.
                 throw ex
             } catch (ex: Exception) {
+                _incoming.value = null
                 _error.value = ex.localizedMessage ?: "Cannot reach the development server"
             }
             delay(2_000)
@@ -122,7 +123,13 @@ class RemoteDriverRepository(context: Context, url: String, token: String, priva
         val pickup = draft.getJSONObject("pickup")
         val destination = draft.getJSONObject("destination")
         return request(json.getString("id"), pickup, destination, option,
-            draft.optJSONObject("routeEstimate")).copy(pickupNotes = draft.optString("pickupNotes", ""), rider = Rider("rider", json.optString("riderName", "Rider"), 0.0, 0)) to stage
+            draft.optJSONObject("routeEstimate")).copy(pickupNotes = draft.optString("pickupNotes", ""), rider = Rider("rider", json.optString("riderName", "Rider"), 0.0, 0),
+                pickupDistanceKm = json.optJSONObject("dispatch")?.optDouble("pickupDistanceKm") ?: 0.0,
+                pickupEtaMin = json.optJSONObject("driver")?.optInt("pickupEtaMinutes") ?: 0,
+                pickupRouteSource = json.optJSONObject("driver")?.optString("pickupEstimateSource").orEmpty(),
+                allowanceCents = json.optJSONObject("compensation45")?.optLong("distanceAllowanceCents") ?: 0,
+                bonusCents = json.optJSONObject("compensation45")?.optLong("bonusCents") ?: 0,
+                totalPayCents = json.optJSONObject("compensation45")?.optLong("estimatedTotalCents") ?: 0) to stage
     }
 
     suspend fun publishPresence(point: LatLng, observedAt: Long, accuracy: Double) {
@@ -149,7 +156,13 @@ class RemoteDriverRepository(context: Context, url: String, token: String, priva
         category = json.optString("category", "Economy"),
         expiresAtEpochMs = json.optLong("expiresAtEpochMs", 0L),
         offerMode = json.optString("offerMode", "EXCLUSIVE"),
-        nearbyDriverCount = json.optInt("nearbyDriverCount", 1)
+        nearbyDriverCount = json.optInt("nearbyDriverCount", 1),
+        pickupRoutePolyline = json.optJSONObject("pickupRoute")?.optString("encodedPolyline").orEmpty(),
+        pickupRouteSource = json.optJSONObject("pickupRoute")?.optString("source").orEmpty(),
+        allowanceCents = json.optJSONObject("compensation")?.optLong("distanceAllowanceCents") ?: 0,
+        bonusCents = json.optJSONObject("compensation")?.optLong("bonusCents") ?: 0,
+        totalPayCents = json.optJSONObject("compensation")?.optLong("estimatedTotalCents") ?: 0,
+        earningsHourlyCents = json.optJSONObject("compensation")?.optLong("earningsPerHourCents") ?: 0
     )
 
     private fun request(id: String, pickup: JSONObject, destination: JSONObject,

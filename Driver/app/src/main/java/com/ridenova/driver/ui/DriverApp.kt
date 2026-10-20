@@ -125,7 +125,7 @@ fun RideNovaDriverApp(locationGranted: Boolean, viewModel: DriverViewModel = vie
                             onClick = { selectedTab = tab; selectedTrip = null; documents = false; access = false; scope.launch { drawer.close() } })
                     }
                     HorizontalDivider(Modifier.padding(20.dp))
-                    Text("Build 43 · ${BuildConfig.RIDENOVA_ENVIRONMENT}", Modifier.padding(24.dp), style = MaterialTheme.typography.bodySmall)
+                    Text("Build 45 · ${BuildConfig.RIDENOVA_ENVIRONMENT}", Modifier.padding(24.dp), style = MaterialTheme.typography.bodySmall)
                 }
             }
         }) {
@@ -265,19 +265,37 @@ private fun DriverMap(state: DriverUiState, bottomInset: Dp = 0.dp, topInset: Dp
     var loading by remember(ride?.id, preview, dropoff) { mutableStateOf(ride != null) }
     var routeFailed by remember(ride?.id, preview, dropoff) { mutableStateOf(false) }
     var retry by remember { mutableIntStateOf(0) }
+    var zones45 by remember { mutableStateOf<List<org.json.JSONObject>>(emptyList()) }
+    var selectedZone45 by remember { mutableStateOf<org.json.JSONObject?>(null) }
+    LaunchedEffect(state.remoteMode) {
+        if (!state.remoteMode) return@LaunchedEffect
+        val token = com.ridenova.driver.data.FleetCredentials(context).load()
+        if (token.isBlank()) return@LaunchedEffect
+        val api = com.ridenova.driver.data.DriverHttpApi(BuildConfig.RIDENOVA_DEV_URL, token, true)
+        while (true) {
+            try {
+                val a = api.json("GET", "v4/trips/driver/zones").getJSONArray("zones")
+                zones45 = (0 until a.length()).map { a.getJSONObject(it) }
+            } catch (e: kotlinx.coroutines.CancellationException) { throw e }
+            catch (_: Exception) { zones45 = emptyList(); selectedZone45 = null }
+            delay(15_000)
+        }
+    }
     val currentPosition by rememberUpdatedState(state.driverLocation)
     LaunchedEffect(ride?.id, preview, dropoff, retry) {
         if (ride == null) { loading = false; return@LaunchedEffect }
         do {
             loading = route == null
-            val pickup = if (preview) async { DriverRoadRoutes.fetch(context, currentPosition, ride.pickup) } else null
+            val pickup = if (preview && !state.remoteMode) async { DriverRoadRoutes.fetch(context, currentPosition, ride.pickup) } else null
             val main = DriverRoadRoutes.fetch(context,
                 if (preview) ride.pickup else currentPosition,
                 if (preview || dropoff) ride.destination else ride.pickup)
             route = main.getOrNull()
             if (!preview && state.remoteMode) route?.let { saveRoute44(context, ride.id, it, dropoff) }
             val pickupResult = pickup?.await()
-            pickupRoute = pickupResult?.getOrNull()
+            pickupRoute = if (preview && state.remoteMode) ride.pickupRoutePolyline.takeIf { it.isNotBlank() }?.let {
+                RoadRoute(DriverRoadRoutes.decode(it), (ride.pickupDistanceKm*1000).toInt(), ride.pickupEtaMin, emptyList())
+            } else pickupResult?.getOrNull()
             routeFailed = main.isFailure || pickupResult?.isFailure == true
             loading = false
             if (!preview) delay(30_000)
@@ -327,6 +345,14 @@ private fun DriverMap(state: DriverUiState, bottomInset: Dp = 0.dp, topInset: Dp
                 Marker(state = rememberUpdatedMarkerState(it.destination), title = "Drop-off", snippet = it.destinationName,
                     icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET))
             }
+            zones45.filter { it.optLong("endMs") > System.currentTimeMillis() }.forEach { z ->
+                Circle(center = LatLng(z.getDouble("latitude"), z.getDouble("longitude")), radius = z.getDouble("radiusKm")*1000,
+                    fillColor = Color(0x337C4DFF), strokeColor = Color(0xFF7C4DFF), strokeWidth = 3f,
+                    clickable = true, onClick = { selectedZone45 = z })
+                Marker(state = rememberUpdatedMarkerState(LatLng(z.getDouble("latitude"),z.getDouble("longitude"))),
+                    title = "${z.getString("label")} · +${money(z.getLong("bonusCents")/100.0)}",
+                    snippet = "${z.getString("category")} · tap zone for conditions")
+            }
             pickupRoute?.let { Polyline(points = it.points, color = Color(0xFF2878FF), width = 10f) }
             route?.let { Polyline(points = it.points, color = Color(0xFF167A5B), width = 12f) }
         } else Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surfaceVariant), contentAlignment = Alignment.Center) {
@@ -335,6 +361,11 @@ private fun DriverMap(state: DriverUiState, bottomInset: Dp = 0.dp, topInset: Dp
                 Text("Map unavailable", fontWeight = FontWeight.Bold)
                 Text("Map setup is required for this build.", style = MaterialTheme.typography.bodySmall)
             }
+        }
+        selectedZone45?.let { z ->
+            AlertDialog(onDismissRequest = { selectedZone45 = null }, title = { Text(z.getString("label")) },
+                text = { Text("+${money(z.getLong("bonusCents")/100.0)} · ${z.getString("category")}\nExpires ${java.text.DateFormat.getTimeInstance().format(java.util.Date(z.getLong("endMs")))}\nPickup must be inside the zone. Accept before expiry and complete the trip. Highest single bonus applies. Budget is reserved at acceptance; check the offer for the actual bonus.") },
+                confirmButton = { TextButton(onClick = { selectedZone45 = null }) { Text("Got it") } })
         }
         if (ride != null) Surface(Modifier.align(Alignment.TopStart).padding(10.dp), shape = RoundedCornerShape(12.dp)) {
             Row(Modifier.padding(horizontal = 12.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -441,7 +472,7 @@ private fun RideRequestCard(
     val offerActive = ride.expiresAtEpochMs <= 0L || secondsLeft > 0L
     val totalMinutes = ride.pickupEtaMin + ride.tripEtaMin
     val combinedKm = ride.pickupDistanceKm + ride.tripDistanceKm
-    val grossPerHour = if (totalMinutes > 0) ride.driverEstimatedEarningsCad * 60.0 / totalMinutes else 0.0
+    val grossPerHour = if (ride.earningsHourlyCents > 0) ride.earningsHourlyCents/100.0 else if (totalMinutes > 0) ride.driverEstimatedEarningsCad * 60.0 / totalMinutes else 0.0
     Surface(modifier = modifier.fillMaxWidth(), shape = RoundedCornerShape(24.dp),
         color = MaterialTheme.colorScheme.surface, shadowElevation = 0.dp) {
         Column(Modifier.padding(horizontal=20.dp,vertical=16.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
@@ -458,11 +489,11 @@ private fun RideRequestCard(
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
-                    Text("ESTIMATED EARNINGS", color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    Text("ESTIMATED TOTAL PAYMENT", color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.labelLarge)
-                    Text(money(ride.driverEstimatedEarningsCad),
+                    Text(money(if (ride.totalPayCents > 0) ride.totalPayCents/100.0 else ride.driverEstimatedEarningsCad),
                         style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
-                    Text("Test trip · gross before costs", style = MaterialTheme.typography.labelSmall,
+                    Text("Test trip · includes distance allowance", style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 Column(horizontalAlignment = Alignment.End) {
@@ -485,6 +516,8 @@ private fun RideRequestCard(
                     modifier = Modifier.fillMaxWidth().height(7.dp).clip(RoundedCornerShape(7.dp)))
             }
             HorizontalDivider()
+            Text("Earnings ${money(ride.driverEstimatedEarningsCad)} · Mileage ${money(ride.allowanceCents/100.0)} · Bonus ${money(ride.bonusCents/100.0)}", style = MaterialTheme.typography.bodySmall)
+            if (remoteMode) Text(if (ride.pickupRouteSource == "GOOGLE_ROADS") "Pickup: road route with traffic estimate" else "Approximate pickup only · road routing unavailable", style = MaterialTheme.typography.bodySmall)
             RouteLine(Icons.Default.RadioButtonChecked, ride.pickupName,
                 if (ride.pickupDistanceKm <= 0.1) "Pickup · nearby" else
                     "Pickup · ${"%.1f".format(Locale.US,ride.pickupDistanceKm)} km · ${ride.pickupEtaMin} min")
@@ -503,13 +536,13 @@ private fun RideRequestCard(
                     Text("~${"%.1f".format(Locale.US,combinedKm)} km", fontWeight = FontWeight.SemiBold)
                 }
                 Column(Modifier.weight(1f)) {
-                    Text("GROSS / HOUR*", style = MaterialTheme.typography.labelSmall,
+                    Text("EARNINGS / HR*", style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Text(if (totalMinutes > 0) "~${money(grossPerHour)}" else "N/A",
                         fontWeight = FontWeight.SemiBold)
                 }
             }
-            Text("*Gross estimate for this offer; not net profit or an hourly wage.",
+            Text("*Earnings plus bonus, excluding mileage allowance. Not net profit or a guaranteed hourly wage. Period minimum adjustment is separate.",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
             if (showActions) Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -674,6 +707,7 @@ private fun EarningsScreen(state: DriverUiState,trips: List<CompletedTrip>,onTri
     ) {
         Spacer(Modifier.height(12.dp))
         NovaSection("Your earnings","Track your trips. Test amounts are not a payout balance.")
+        if (state.remoteMode) PayPeriod45()
         Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),horizontalArrangement=Arrangement.spacedBy(8.dp)) {
             listOf("Today", "This week", "All time").forEach { option ->
                 FilterChip(selected = period == option, onClick = { period = option },

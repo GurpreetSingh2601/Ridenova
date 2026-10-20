@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/workspace/scratch/6b898b26fe2d/work/RN45/verification/postgres-integration.py", line 17, in <module>
+    import psycopg
+ModuleNotFoundError: No module named 'psycopg'

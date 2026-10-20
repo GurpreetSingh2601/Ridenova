@@ -19,6 +19,7 @@ from psycopg import sql
 import test_build35 as legacy
 import test_build43 as build43
 import test_build44 as build44
+import test_build45 as build45
 from database import request_lock
 from migrate import apply, check
 from server import Service
@@ -146,7 +147,7 @@ class PostgresMigrationTests(unittest.TestCase):
     def test_migrations_reapply_without_changes(self):
         apply(DATABASE); check(DATABASE)
         with psycopg.connect(DATABASE) as db:
-            self.assertEqual(db.execute('SELECT COUNT(*) FROM schema_migrations').fetchone()[0], 4)
+            self.assertEqual(db.execute('SELECT COUNT(*) FROM schema_migrations').fetchone()[0], 5)
 
     def test_build42_finance_and_boost_persist_across_services(self):
         now = 1_800_000_000_000
@@ -221,6 +222,11 @@ class PostgresOperations44Tests(build44.Build44Tests):
         self.request = {'pickup': {'name': 'A', 'address': 'Vancouver', 'latitude': 49.28, 'longitude': -123.12},
                         'destination': {'name': 'B', 'address': 'Burnaby', 'latitude': 49.25, 'longitude': -122.98}, 'scheduled': False}
     def tearDown(self): pass
+
+class PostgresCompensation45Tests(build45.Build45Tests):
+    setUp = PostgresOperations44Tests.setUp
+    tearDown = PostgresOperations44Tests.tearDown
+
 
 if __name__ == '__main__':
     apply(DATABASE)

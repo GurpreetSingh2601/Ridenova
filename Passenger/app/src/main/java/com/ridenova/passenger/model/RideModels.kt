@@ -129,7 +129,8 @@ data class DriverProfile(
     val vehicle: String,
     val colour: String,
     val plate: String,
-    val pickupEtaMinutes: Int
+    val pickupEtaMinutes: Int,
+    val pickupEstimateSource: String = "UNAVAILABLE"
 )
 
 data class RideTrip(

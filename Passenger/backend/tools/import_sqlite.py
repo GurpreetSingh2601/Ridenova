@@ -51,6 +51,8 @@ def import_database(source, target, report_path):
                 finance_tables = re.findall(r'CREATE TABLE (\w+)', finance.read_text())
                 operations=Path(__file__).resolve().parents[1]/'migrations/004_safety_operations.sql'
                 finance_tables+=re.findall(r'CREATE TABLE IF NOT EXISTS (\w+)',operations.read_text())
+                compensation=Path(__file__).resolve().parents[1]/'migrations/005_trip_compensation.sql'
+                finance_tables+=re.findall(r'CREATE TABLE IF NOT EXISTS (\w+)',compensation.read_text())
                 if not set(baseline_tables) <= set(tables) or set(tables) - set(baseline_tables) - set(finance_tables):
                     raise RuntimeError('Source must contain complete accepted baseline and only known Build 42 extensions')
                 if set(baseline_tables + finance_tables) != target_tables - operational:

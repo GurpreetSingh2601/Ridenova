@@ -1,3 +1,3 @@
-# RideNova Passenger 0.35 — Build 43
+# RideNova Passenger 0.37 — Build 45
 
-Use the root START_HERE_BUILD_43.md. Configure your existing staging HTTPS origin and Maps key privately. Manual pickup, saved draft recovery, pickup instructions and no-show status are included. Existing Stripe sandbox, booking and ratings remain. No real SMS, live charges or public launch is enabled.
+Read ../START_HERE_BUILD_45.md. Configure the existing staging HTTPS API and restricted Android Maps key privately. Passenger ETA source labels now distinguish road routing from approximation. The shared API adds engaged compensation and capped boost reservations without changing accepted passenger prices. Real-device validation remains required.

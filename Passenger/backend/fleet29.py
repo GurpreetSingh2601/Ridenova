@@ -320,12 +320,17 @@ class Fleet(Foundation):
                     db.execute('INSERT OR REPLACE INTO fleet_declines VALUES (?,?,?)',(driver_id,ride_id,now+60000))
                     self._audit(db,driver_id,'driver','DECLINED_'+ride_id)
                     return {'status':'DECLINED'}
+                road45=self.prepare_accept45(db,ride,d) if hasattr(self,'prepare_accept45') else None
                 p=ride['draft']['pickup']; dist=self.service.distance_km(d[7],d[8],p['latitude'],p['longitude'])
                 ride.update(status='DRIVER_ASSIGNED',fleetDriverId=driver_id,
                     driver={'name':d[1],'vehicle':d[2],'plate':d[3],'rating':5.0,'colour':'','pickupEtaMinutes':self.eta(dist)},
                     driverPosition={'latitude':d[7],'longitude':d[8],'recordedAtEpochMs':d[9]},
                     dispatch={'pickupDistanceKm':round(dist,2),'pickupEtaMinutes':self.eta(dist),'assignedAtEpochMs':now},
                     pin=str(secrets.randbelow(9000)+1000))
+                if road45:
+                    ride['driver']['pickupEtaMinutes']=max(1,math.ceil(road45['durationSeconds']/60))
+                    ride['driver']['pickupEstimateSource']=road45['source']
+                    ride['dispatch'].update(pickupDistanceKm=road45['distanceMeters']/1000,pickupEtaMinutes=ride['driver']['pickupEtaMinutes'])
             else:
                 if ride.get('fleetDriverId')!=driver_id: reject(403,'FORBIDDEN','Ride belongs to another driver')
                 if action == 'no-show':

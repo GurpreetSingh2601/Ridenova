@@ -268,6 +268,7 @@ class RideNovaLocalStore(context: Context) {
         .put("colour", driver.colour)
         .put("plate", driver.plate)
         .put("pickupEtaMinutes", driver.pickupEtaMinutes)
+        .put("pickupEstimateSource", driver.pickupEstimateSource)
 
     private fun driverFromJson(json: JSONObject): DriverProfile = DriverProfile(
         name = json.getString("name"),
@@ -275,7 +276,8 @@ class RideNovaLocalStore(context: Context) {
         vehicle = json.getString("vehicle"),
         colour = json.getString("colour"),
         plate = json.getString("plate"),
-        pickupEtaMinutes = json.getInt("pickupEtaMinutes")
+        pickupEtaMinutes = json.getInt("pickupEtaMinutes"),
+        pickupEstimateSource = json.optString("pickupEstimateSource", "UNAVAILABLE")
     )
 
     private fun paymentToJson(payment: TripPayment): JSONObject = JSONObject()

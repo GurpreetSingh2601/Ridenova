@@ -1,6 +1,6 @@
 # RideNova development rules
 
-Updated for Build 44 safety operations on 2026-10-07 UTC. Preserve this file in every later build.
+Updated for Build 45 trip accuracy and driver pay on 2026-10-20. Preserve this file in every later build.
 
 ## Architecture
 
@@ -26,7 +26,7 @@ Updated for Build 44 safety operations on 2026-10-07 UTC. Preserve this file in 
 
 ## Required testing
 
-- Run `python VERIFY_BUILD_44.py`.
+- Run `python VERIFY_BUILD_45.py`.
 - Require PostgreSQL concurrency, import and restore tests in `verification/postgres-integration.py`; SQLite and SQL syntax tests are not substitutes.
 - Require matching API/worker revision and fresh heartbeat at `/ready` before inviting staging testers.
 - Run all backend regression tests and add a targeted test for every regression.
@@ -84,3 +84,7 @@ One backend; additive migration 004; preserve 001–003 checksums, accounts, acc
 Document expiry blocks new work, not safe completion of a started trip or account/earnings access. Review/downloads are audited. Provider route cache rights differ from actual GPS evidence holds. Use Google Maps for Google route results. See retention/known-issues guides.
 
 Run portable regressions, browser/RBAC tests, Android variants and PostgreSQL integration/restore CI. Keep actual results and pending gates explicit. Keep checkpoint and release guides persistent. Build 44 includes Share Trip/emergency basics; boost map remains deferred. Do not activate real payments or uncapped incentives.
+
+## Build 45 invariants
+
+Run VERIFY_BUILD_45.py for the current release. Preserve migrations 001–004; add 005 only. Do not call fallback air distance a road ETA. Staging offers require a server road route. Offer map geometry and card use one frozen snapshot. Never include mileage reimbursement in an hourly wage claim. Bonus budgets reserve inside the acceptance transaction and cannot be overspent. Every assignment ends separately on cancellation/reassignment; never erase accepted work because the passenger paid zero. GPS chord sums are provisional; distance review is mandatory before period finalization. No historical GPS is fabricated. Finalized test adjustments are idempotent and immutable. Real payouts, tipping settlement, payroll corrections and commercial compliance approval remain separate gates.

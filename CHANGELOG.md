@@ -1,3 +1,7 @@
+# Build 45 — 2026-10-20
+
+See RELEASE_NOTES_BUILD_45.md for routing, compensation, boost map and reliability changes. This is a source staging candidate; see TEST_RESULTS_BUILD_45.md for actual checks.
+
 # Build 44 · 2026-10-07
 
 Added safety operations, consented tracking, trip evidence/replay, check-ins, document lifecycle, share links and migration 004. Existing fares, accounts and finance preserved. See current release notes/tests.

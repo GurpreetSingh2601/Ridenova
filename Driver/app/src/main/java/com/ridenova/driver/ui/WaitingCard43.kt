@@ -50,7 +50,7 @@ internal fun WaitingCard43(rideId: String, onCancelled: () -> Unit) {
         Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text("Waiting for rider", style = MaterialTheme.typography.titleMedium)
             Text(if (verified) "No-show available in ${remaining.coerceAtLeast(0) / 60}:${(remaining.coerceAtLeast(0) % 60).toString().padStart(2, '0')}" else "Verify your location at the pickup to start the five-minute timer.")
-            Text("Check the pickup point and rider instructions. No waiting or no-show fee is charged in staging.", style = MaterialTheme.typography.bodySmall)
+            Text("Check the pickup point and rider instructions. No waiting or no-show fee is charged in staging. Accepted pickup and waiting time remain in your pay-period record.", style = MaterialTheme.typography.bodySmall)
             if (!verified) OutlinedButton(enabled = fresh && !busy, onClick = {
                 scope.launch { busy = true
                     try { api.json("POST", "v2/fleet/driver/rides/$rideId/arrive", JSONObject()); refresh() }

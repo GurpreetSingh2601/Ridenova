@@ -1,1 +1,1 @@
-Extract into a short folder such as G:\RideNova\Release44. Open RN44/START_HERE_BUILD_44.md. Keep the same repository, database, credentials and private Android settings.
+Extract RN45 to a short Windows path such as C:\RN45. Read START_HERE_BUILD_45.md. Keep your private local.properties files out of Git.

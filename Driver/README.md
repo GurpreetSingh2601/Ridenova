@@ -1,3 +1,3 @@
-# RideNova Driver 0.20 — Build 43
+# RideNova Driver 0.22 — Build 45
 
-Use the root START_HERE_BUILD_43.md. The same Passenger/backend API serves Driver; no second backend is needed. Includes immediate optional rider stars, assigned pickup instructions/address and a verified five-minute, zero-fee waiting/no-show flow. Preserve staging invitation, signing and Maps settings. Boost-zone map and in-app communication remain pending.
+Read ../START_HERE_BUILD_45.md. One shared API lives in Passenger/backend. Includes pickup road snapshots, separate earnings/mileage/bonus estimates, boost-zone map details, restored pickup figures and pay-period summaries. Preserve private staging invitation, signing and Maps settings. Distance verification and period finalization remain test accounting; no live payouts. Android compilation/device acceptance are pending.

@@ -256,7 +256,8 @@ class BackendRideNovaRepository(
     private fun driverFromJson(json: JSONObject) = DriverProfile(
         name = json.getString("name"), rating = json.getDouble("rating"),
         vehicle = json.getString("vehicle"), colour = json.getString("colour"),
-        plate = json.getString("plate"), pickupEtaMinutes = json.getInt("pickupEtaMinutes")
+        plate = json.getString("plate"), pickupEtaMinutes = json.getInt("pickupEtaMinutes"),
+        pickupEstimateSource = json.optString("pickupEstimateSource", "UNAVAILABLE")
     )
 
     private fun paymentFromJson(json: JSONObject) = TripPayment(

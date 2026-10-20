@@ -1,0 +1,5 @@
+# Build 45 data handling
+
+Build 44's GPS evidence and route-snapshot retention policy remains in force. New offer snapshots contain pickup/destination route information and expire with the offer lease; the existing scheduler removes expired snapshots. New acceptance records retain financial estimates, engaged timestamps, measured/verified distance, rate allocation and review state. Closed assignments discard their last GPS coordinate; retained pickup-route metadata excludes geometry and origin. Detailed route evidence remains governed by Build 44 retention, not by the payroll table.
+
+Pay-period finalization and distance reviews are auditable and immutable after finalization. Financial retention/deletion periods and payroll corrections require an approved production policy; no automatic deletion of payroll records is enabled here. Keep local databases, credentials, signing keys, crash dumps and private properties out of source archives and Git. The release packager excludes them. No new sensitive documents or production data were used in this build.

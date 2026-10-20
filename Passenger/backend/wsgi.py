@@ -69,7 +69,7 @@ def create_app(settings=None):
             elif settings.environment == 'staging' and path not in ('/health', '/ready') and environ.get('wsgi.url_scheme') != 'https':
                 status, payload = 400, {'code': 'HTTPS_REQUIRED', 'message': 'HTTPS is required'}
             elif path == '/health':
-                payload = {'status': 'ok', 'build': 44, 'version': '44', 'releaseRevision': '44', 'environment': settings.environment,
+                payload = {'status': 'ok', 'build': 45, 'version': '45', 'releaseRevision': '45', 'environment': settings.environment,
                            'payments': 'stripe-test-optional', 'publicLaunch': False,
                            'revision': os.environ.get('RENDER_GIT_COMMIT', 'local')}
             elif path == '/ready':

@@ -25,6 +25,8 @@ class Operations:
             with s.connect() as db:db.executescript(SCHEMA)
     def evidence(self,db,r,actor,kind,payload,observed=None):
         now=self.s.clock()
+        if kind=='GPS_DRIVER' and hasattr(self.s,'compensation'):
+            self.s.compensation.gps(db,r,actor,payload)
         if observed is None:
             last=db.execute('SELECT MAX(observed_ms) FROM trip_evidence44 WHERE ride_id=? AND actor=? AND kind=?',(r['id'],actor,kind)).fetchone()[0]
             observed=max(now,(last or 0)+1)
@@ -178,7 +180,9 @@ class Operations:
     def maintain(self):
         now=self.s.clock()
         with self.s.connect() as db:
-            db.execute('BEGIN IMMEDIATE');db.execute("DELETE FROM trip_evidence44 WHERE kind='ROUTE_SNAPSHOT' AND received_ms<?",(now-30*86400000,));db.execute('DELETE FROM trip_holds44 WHERE until_ms<=?',(now,));protected={x[0] for x in db.execute('SELECT ride_id FROM trip_holds44')};drivers=set()
+            db.execute('BEGIN IMMEDIATE')
+            db.execute('DELETE FROM offer_snapshots45 WHERE expires_ms<=?',(now,))
+            db.execute("DELETE FROM trip_evidence44 WHERE kind='ROUTE_SNAPSHOT' AND received_ms<?",(now-30*86400000,));db.execute('DELETE FROM trip_holds44 WHERE until_ms<=?',(now,));protected={x[0] for x in db.execute('SELECT ride_id FROM trip_holds44')};drivers=set()
             for (payload,) in db.execute('SELECT payload FROM rides'):
                 r=json.loads(payload)
                 if r['id'] in protected or r['status'] in ACTIVE:

@@ -1,6 +1,6 @@
 {
   "private": true,
-  "description": "RideNova Build 44 Admin source and browser regression checks",
+  "description": "RideNova Build 45 Admin source and browser regression checks",
   "scripts": {
     "test": "node admin-source-test.cjs",
     "test:browser": "node admin-browser-test.cjs"

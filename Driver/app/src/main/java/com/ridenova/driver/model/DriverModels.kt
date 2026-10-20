@@ -38,7 +38,13 @@ data class RideRequest(
     val expiresAtEpochMs: Long = 0L,
     val offerMode: String = "EXCLUSIVE",
     val pickupNotes: String = "",
-    val nearbyDriverCount: Int = 1
+    val nearbyDriverCount: Int = 1,
+    val pickupRoutePolyline: String = "",
+    val pickupRouteSource: String = "UNAVAILABLE",
+    val allowanceCents: Long = 0,
+    val bonusCents: Long = 0,
+    val totalPayCents: Long = 0,
+    val earningsHourlyCents: Long = 0
 )
 
 data class CompletedTrip(

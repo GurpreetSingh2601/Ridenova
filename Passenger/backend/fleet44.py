@@ -88,6 +88,9 @@ class Fleet(Previous):
                 if r:
                     r['driverPosition']={**p,'recordedAtEpochMs':p['observedAtEpochMs']};r['updatedAtEpochMs']=self.service.clock()
                     if r['status']!='TRIP_STARTED':
-                        pu=r['draft']['pickup'];r['driver']['pickupEtaMinutes']=self.eta(self.service.distance_km(p['latitude'],p['longitude'],pu['latitude'],pu['longitude']))
+                        pu=r['draft']['pickup']; road=self.service.pickup_routes.get(driver,p,pu)
+                        r['driver']['pickupEtaMinutes']=0 if r['status']=='DRIVER_ARRIVED' else max(1,__import__('math').ceil(road['durationSeconds']/60))
+                        r['driver']['pickupEstimateSource']=road['source']
+                        r['driver']['pickupEstimateAtEpochMs']=road['estimatedAtEpochMs']
                     db.execute('UPDATE rides SET payload=? WHERE id=?',(json.dumps(r),r['id']));o.monitor(db,r,driver,p)
         return {'ok':True,'live':live}

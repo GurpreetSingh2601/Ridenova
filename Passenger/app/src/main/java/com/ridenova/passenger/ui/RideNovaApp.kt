@@ -2502,7 +2502,7 @@ private fun DriverCard(driver: DriverProfile, pin: String?, status: TripStatus) 
                 }
                 Surface(shape = RoundedCornerShape(14.dp), color = MaterialTheme.colorScheme.surfaceVariant) {
                     Text(
-                        when (status) { TripStatus.TRIP_STARTED -> "On trip"; TripStatus.DRIVER_ARRIVED -> "Arrived"; else -> "${driver.pickupEtaMinutes} min" },
+                        when (status) { TripStatus.TRIP_STARTED -> "On trip"; TripStatus.DRIVER_ARRIVED -> "Arrived"; else -> if(driver.pickupEstimateSource == "GOOGLE_ROADS") "~${driver.pickupEtaMinutes} min" else "ETA approximate" },
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 7.dp),
                         fontWeight = FontWeight.Bold
                     )
@@ -3115,6 +3115,7 @@ private fun AccountScreen(nav: NavHostController, themeMode: RideNovaThemeMode, 
                 Icon(Icons.Default.Logout, null); Spacer(Modifier.width(8.dp)); Text("Sign out")
             }
             Spacer(Modifier.height(18.dp))
+            Text("Build 45 · ${BuildConfig.VERSION_NAME} · ${BuildConfig.RIDENOVA_ENVIRONMENT}", style = MaterialTheme.typography.bodySmall)
         }
     }
 }
